@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EquilibriFun : 카드로 여는 화학평형의 세계</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <!-- jQuery 최신 버전 추가 -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <!-- 공통 CSS 추가 -->
+  <link rel="stylesheet" href="styles/common.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 40px;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 50px;
+    }
+    .menu-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      margin-bottom: 100px;
+    }
+    .menu-card {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+      transition: transform 0.2s ease;
+    }
+    .menu-card:hover {
+      transform: translateY(-5px);
+    }
+    .menu-card a {
+      text-decoration: none;
+      color: #2c3e50;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .menu-card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #2980b9;
+    }
+    .chatbot-container {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: 300px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+      transition: transform 0.3s ease;
+    }
+    .chatbot-container:hover {
+      transform: translateY(-5px);
+    }
+    .chatbot-header {
+      background-color: #2196F3;
+      color: white;
+      padding: 15px;
+      border-radius: 10px 10px 0 0;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chatbot-header h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+    .chatbot-header button {
+      background-color: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+    .chatbot-header button:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    .chatbot-content {
+      padding: 15px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .chatbot-input {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      border-top: 1px solid #eee;
+    }
+    .chatbot-input input {
+      flex-grow: 1;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .chatbot-input button {
+      padding: 8px 15px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .chatbot-input button:hover {
+      background-color: #1976D2;
+    }
+    /* 기본 스타일 */
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 40px;
+    }
+    
+    /* 프로필 이미지 스타일 */
+    .profile-image {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    
+    .profile-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .profile-image-placeholder {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+    
+    .profile-image-placeholder::before {
+      content: "👤";
+      font-size: 40px;
+    }
+    
+    .popup-button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 12px;
+      margin-left: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    
+    .popup-button:hover {
+      background: #2980b9;
+    }
+
+    .upload-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .upload-instructions {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .upload-instructions h3 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+
+    .upload-instructions ol {
+      padding-left: 20px;
+      margin-bottom: 0;
+    }
+
+    .upload-area {
+      border: 2px dashed #3498db;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .upload-area:hover {
+      border-color: #2980b9;
+      background: #f8f9fa;
+    }
+
+    .upload-prompt {
+      color: #7f8c8d;
+    }
+
+    .upload-prompt i {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    .preview-container {
+      margin-top: 20px;
+    }
+
+    .preview-container img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    .retake-btn {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .processing-status {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .result-container {
+      margin-top: 20px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .ph-value {
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .ph-value .number {
+      color: #2c3e50;
+    }
+
+    .ph-value .indicator {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .ph-description {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 15px;
+    }
+
+    .ph-scale {
+      width: 100%;
+      height: 20px;
+      background: linear-gradient(to right, 
+        #ff0000 0%, #ff0000 20%,  /* 빨강 (pH 0-3) */
+        #ff8000 20%, #ff8000 40%,  /* 주황 (pH 4-5) */
+        #ffff00 40%, #ffff00 50%,  /* 노랑 (pH 6) */
+        #00ff00 50%, #00ff00 60%,  /* 초록 (pH 7) */
+        #0000ff 60%, #0000ff 100%  /* 파랑 (pH 8-14) */
+      );
+      border-radius: 10px;
+      margin: 10px 0;
+      position: relative;
+    }
+
+    .ph-marker {
+      position: absolute;
+      width: 4px;
+      height: 30px;
+      background: white;
+      top: -5px;
+      transform: translateX(-50%);
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
+
+    .ph-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+      font-size: 12px;
+      color: #7f8c8d;
+    }
+
+    .processing-time {
+      font-size: 12px;
+      color: #95a5a6;
+      margin-top: 10px;
+    }
+
+    /* 처음으로 돌아가는 버튼 스타일 제거 */
+  </style>
+</head>
+<body>
+
+    <div id="user-info" style="position: absolute; top: 0; right: 30px; font-size: 13px; color: #34495e;"></div>
+
+    <!-- 로그인 상태에 따라 표시되는 메뉴 -->
+    <div id="auth-buttons" style="position: absolute; top: 20px; right: 30px; font-size: 14px; display: block;">
+      <a href="firebase/login.html" style="margin-right: 10px; text-decoration: none; color: #2c3e50;">🔐 로그인</a>
+      <a href="firebase/register.html" style="margin-right: 10px; text-decoration: none; color: #2c3e50;">📝 회원가입</a>
+      <a href="firebase/profile.html" style="margin-right: 10px; text-decoration: none; color: #2c3e50;">👤 프로필</a>
+      <a href="firebase/teacher_dashboard.html" id="teacher-dashboard-link" style="text-decoration: none; color: #2c3e50; display: none;">📋 교사용 대시보드</a>
+    </div>
+
+    <!-- 로그인된 상태에서 표시되는 메뉴 -->
+    <div id="user-menu" style="position: absolute; top: 20px; right: 30px; font-size: 14px; display: none;">
+      <a href="firebase/profile.html" style="margin-right: 10px; text-decoration: none; color: #2c3e50;">👤 프로필</a>
+      <a href="firebase/teacher_dashboard.html" id="teacher-dashboard-link-logged" style="text-decoration: none; color: #2c3e50; display: none;">📋 교사용 대시보드</a>
+      <a href="#" onclick="logout()" style="margin-right: 10px; text-decoration: none; color: #c00;">🚪 로그아웃</a>
+    </div>
+
+  <h1>EquilibriFun : 카드로 여는 화학 평형의 세계</h1>
+
+  <div class="menu-container">
+    <div class="menu-card">
+      <h3>1. 화학 평형 카드게임</h3>
+      <a href="cardgame/web_version/index.html">🃏 동시에 카드 뒤집기</a>
+      <a href="cardgame/web_version2/index.html" style="display: block; margin-top: 10px;">🃏 차례대로 카드 뒤집기</a>
+      <p style="margin-top: 10px; font-size: 14px; color: #666;">
+        빨간색과 파란색 카드의 변화를 통해 화학평형의 원리를 시각적으로 이해해보세요.<br>
+        실시간 그래프로 평형의 변화를 확인할 수 있습니다.
+      </p>
+    </div>
+    <div class="menu-card">
+      <h3>2. 콘텐츠 학습- 개발 중</h3>
+      <ul>
+        <li><a href="contents/concept_intro.html">📘 화학 평형의 이해</a></li>
+        <li><a href="contents/history.html">📜 역사 속의 화학 평형</a></li>
+        <li><a href="contents/daily_life.html">🏠 생활 속의 화학 평형</a></li>
+        <li><a href="contents/equilibrium_constant.html">📐 화학 평형과 평형 상수</a></li>
+      </ul>
+    </div>
+    <div class="menu-card">
+      <h3>3. 학습활동</h3>
+      <a href="student_activity/student_activity.html">👩‍🔬 오픈소스 엔진 기반 활동 - 개발 중</a>
+      <a href="student_activity/ph_measurement/index.html" style="display: block; margin-top: 10px;">🎨 산-염기 평형: pH 측정 인공지능 - 공사 중</a>
+      <p style="margin-top: 10px; font-size: 14px; color: #666;">
+        변색된 만능시험지 사진을 이용해서 산성과 염기성을 알아보세요!<br>
+        인공지능을 이용하여 만능 시험지 사진을 분석하여 pH값을 분석하고 예측합니다.
+      </p>
+    </div>
+    <div class="menu-card">
+      <h3>4. 화학 평형 시뮬레이션</h3>
+      <a href="simulation/암모니아의 생성반응(하버-보슈법)/haber.html">🌡️ 암모니아의 생성반응(하버-보슈법)</a>
+      <p style="margin-top: 10px; font-size: 14px; color: #666;">
+        암모니아 합성 반응을 시뮬레이션해보세요!<br>
+        온도, 압력, 촉매 등의 조건을 변화시키며 평형 이동을 관찰할 수 있습니다.
+      </p>
+    </div>
+    <div class="menu-card">
+      <h3>5. 형성평가 활동</h3>
+      <a href="equilibrium_run/equilibrium_run.html">📝 게임: Equilibrium Runner</a>
+      <p style="margin-top: 10px; font-size: 14px; color: #666;">
+        재미있는 게임을 통해 화학 평형을 배워보세요!<br>
+        게임은 "초기반응속도가 변화하여 정반응 속도와 역반응 속도가 같으면 동적 평형"이라는 아이디어가 기초가 되었습니다.
+      </p>
+    </div>
+    <div class="menu-card">
+      <h3>6. 학습 현황</h3>
+      <a href="student_dashboard/student_dashboard.html">📊 학습 현황 확인하기</a>
+      <p style="margin-top: 10px; font-size: 14px; color: #666;">
+        각 활동의 진행 상황을 확인하세요.<br>
+      </p>
+    </div>
+  </div>
+
+  <div class="chatbot-container">
+    <div class="chatbot-header">
+      <h3>👨‍🔬 르샤틀리에와 대화하기</h3>
+      <button onclick="openChatbot()" class="popup-button">크게 보기</button>
+    </div>
+    <div class="chatbot-content">
+      <div id="chat-log" class="chatbot-log" style="max-height: 200px; overflow-y: auto; padding: 10px;"></div>
+      <div class="chatbot-input">
+        <input id="chat-input" type="text" placeholder="르샤틀리에에게 질문하세요..." onkeypress="if(event.key==='Enter'){sendMessage()}" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; flex-grow: 1;">
+        <button onclick="sendMessage()">보내기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Firebase 초기화
+    const firebaseConfig = {
+      apiKey: "AIzaSyBE0r282qiZAoL6MCYbpLt-Zmxp7JDYMVk",
+      authDomain: "test-equilibrifun.firebaseapp.com",
+      projectId: "test-equilibrifun",
+      storageBucket: "test-equilibrifun.appspot.com",
+      messagingSenderId: "804507284339",
+      appId: "1:804507284339:web:d03de182b9e8fadccb0b06"
+    };
+
+    // Firebase 초기화 (중복 방지)
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    // 챗봇 서버 URL 설정
+    const CHATBOT_API_URL = '/chat';
+    
+    // 채팅 로그에 메시지 추가
+    function addMessage(message, isUser) {
+      const chatLog = document.getElementById('chat-log');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = isUser ? 'user-message' : 'bot-message';
+      messageDiv.style.margin = '5px 0';
+      messageDiv.style.padding = '8px 12px';
+      messageDiv.style.borderRadius = '8px';
+      messageDiv.style.maxWidth = '80%';
+      messageDiv.style.wordWrap = 'break-word';
+      
+      if (isUser) {
+        messageDiv.style.backgroundColor = '#e3f2fd';
+        messageDiv.style.marginLeft = 'auto';
+      } else {
+        messageDiv.style.backgroundColor = '#f5f5f5';
+      }
+      
+      messageDiv.textContent = message;
+      chatLog.appendChild(messageDiv);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    // WebSocket 연결 관리
+    let socket;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    let connectionStatus = 'disconnected';
+    let currentMessage = '';
+    let currentMessageSpan = null;
+
+    // 연결 상태 업데이트 함수
+    function updateConnectionStatus(status) {
+        connectionStatus = status;
+        const statusElement = document.getElementById('connection-status');
+        if (statusElement) {
+            statusElement.textContent = status === 'connected' ? '연결됨' : 
+                                      status === 'connecting' ? '연결 중...' : '연결 끊김';
+            statusElement.style.color = status === 'connected' ? 'green' : 
+                                      status === 'connecting' ? 'orange' : 'red';
+        }
+    }
+
+    // WebSocket 연결 함수
+    function connectWebSocket() {
+        if (socket) {
+            socket.close();
+        }
+
+        updateConnectionStatus('connecting');
+        
+        try {
+            // 깃허브 페이지용 WebSocket 서버 URL로 변경
+            socket = io('https://eqfun.github.io/test3_eqfun/', {
+                transports: ['websocket'],
+                reconnection: true,
+                reconnectionAttempts: maxReconnectAttempts,
+                reconnectionDelay: 3000
+            });
+
+            socket.on('connect', () => {
+                console.log('WebSocket 연결 성공');
+                updateConnectionStatus('connected');
+                reconnectAttempts = 0;
+                addMessage('르샤틀리에 챗봇이 연결되었습니다. 질문을 입력해주세요!', false);
+            });
+
+            socket.on('disconnect', () => {
+                console.log('WebSocket 연결 종료');
+                updateConnectionStatus('disconnected');
+                addMessage('챗봇 연결이 끊어졌습니다. 잠시 후 다시 시도해주세요.', false);
+                attemptReconnect();
+            });
+
+            socket.on('error', (error) => {
+                console.error('WebSocket 오류:', error);
+                updateConnectionStatus('disconnected');
+                addMessage('챗봇 연결 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', false);
+                attemptReconnect();
+            });
+
+            socket.on('stream', (data) => {
+                console.log('스트림 데이터 수신:', data);
+                if (!currentMessageSpan) {
+                    const chatLog = document.getElementById('chat-log');
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'bot-message';
+                    messageDiv.style.margin = '5px 0';
+                    messageDiv.style.padding = '8px 12px';
+                    messageDiv.style.borderRadius = '8px';
+                    messageDiv.style.maxWidth = '80%';
+                    messageDiv.style.wordWrap = 'break-word';
+                    messageDiv.style.backgroundColor = '#f5f5f5';
+                    
+                    currentMessageSpan = document.createElement('span');
+                    currentMessageSpan.style.display = 'inline';
+                    messageDiv.appendChild(currentMessageSpan);
+                    chatLog.appendChild(messageDiv);
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                }
+
+                currentMessage += data.char;
+                currentMessageSpan.innerHTML = formatChemicalFormula(currentMessage);
+
+                if (data.is_last) {
+                    currentMessage = '';
+                    currentMessageSpan = null;
+                }
+            });
+
+        } catch (error) {
+            console.error('WebSocket 연결 실패:', error);
+            updateConnectionStatus('disconnected');
+            attemptReconnect();
+        }
+    }
+
+    // 재연결 시도 함수
+    function attemptReconnect() {
+        if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            console.log(`재연결 시도 ${reconnectAttempts}/${maxReconnectAttempts}`);
+            setTimeout(connectWebSocket, 3000);
+        } else {
+            console.log('최대 재연결 시도 횟수 도달');
+            updateConnectionStatus('disconnected');
+            addMessage('서버와의 연결이 끊어졌습니다. 페이지를 새로고침하여 다시 시도해주세요.', false);
+        }
+    }
+
+    // 화학식 표시 함수
+    function formatChemicalFormula(text) {
+        return text.replace(/([A-Z][a-z]?\d*)/g, '<span class="formula">$1</span>');
+    }
+
+    // 메시지 전송 함수
+    function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
+        
+        if (!message) return;
+        
+        if (connectionStatus !== 'connected') {
+            addMessage('서버와 연결되지 않았습니다. 잠시 후 다시 시도해주세요.', false);
+            return;
+        }
+        
+        addMessage(message, true);
+        input.value = '';
+        
+        try {
+            console.log('메시지 전송:', message);
+            socket.emit('message', { message: message });
+        } catch (error) {
+            console.error('메시지 전송 오류:', error);
+            addMessage('메시지 전송 중 오류가 발생했습니다.', false);
+        }
+    }
+
+    function openChatbot() {
+      const width = 800;
+      const height = 600;
+      const left = (window.innerWidth - width) / 2;
+      const top = (window.innerHeight - height) / 2;
+      
+      window.open('chatbot-server/lechatelier_bot.html', '르샤틀리에 챗봇', 
+        `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
+    }
+
+    // 페이지 로드 시 WebSocket 연결
+    document.addEventListener('DOMContentLoaded', () => {
+        // 연결 상태 표시 요소 추가
+        const statusDiv = document.createElement('div');
+        statusDiv.id = 'connection-status';
+        statusDiv.style.position = 'fixed';
+        statusDiv.style.bottom = '10px';
+        statusDiv.style.right = '10px';
+        statusDiv.style.padding = '5px 10px';
+        statusDiv.style.backgroundColor = 'white';
+        statusDiv.style.borderRadius = '5px';
+        statusDiv.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+        document.body.appendChild(statusDiv);
+
+        // WebSocket 연결 시작
+        connectWebSocket();
+    });
+  </script>
+
+  <script type="module">
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Firebase 서비스 인스턴스
+      const auth = firebase.auth();
+      
+      // 인증 지속성 설정
+      try {
+        await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        console.log('인증 지속성이 설정되었습니다.');
+      } catch (error) {
+        console.error('인증 지속성 설정 오류:', error);
+      }
+
+      const db = firebase.firestore();
+      
+      // Firestore 설정
+      db.settings({
+        cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
+        merge: true,
+        experimentalAutoDetectLongPolling: true,
+        useFetchStreams: false,
+        ignoreUndefinedProperties: true,
+        cache: {
+          type: 'persistent',
+          synchronizeTabs: true
+        }
+      });
+
+      // 인증 상태 변경 리스너
+      auth.onAuthStateChanged(async (user) => {
+        try {
+          console.log('인증 상태 변경 감지:', user ? '로그인됨' : '로그아웃됨');
+          
+          const userInfoDiv = document.getElementById('user-info');
+          const authButtonsDiv = document.getElementById('auth-buttons');
+          const userMenuDiv = document.getElementById('user-menu');
+          const teacherDashboardLink = document.getElementById('teacher-dashboard-link');
+          const teacherDashboardLinkLogged = document.getElementById('teacher-dashboard-link-logged');
+          
+          if (user) {
+            // 사용자 정보 표시
+            userInfoDiv.innerHTML = `
+              <small style="color: #555;">
+                👤 로그인: <b>${user.displayName || user.email}</b>
+              </small>
+            `;
+            
+            authButtonsDiv.style.display = 'none';
+            userMenuDiv.style.display = 'block';
+            
+            teacherDashboardLink.style.display = 'none';
+            teacherDashboardLinkLogged.style.display = 'none';
+          } else {
+            userInfoDiv.innerHTML = '';
+            authButtonsDiv.style.display = 'block';
+            userMenuDiv.style.display = 'none';
+            teacherDashboardLink.style.display = 'none';
+            teacherDashboardLinkLogged.style.display = 'none';
+          }
+        } catch (error) {
+          console.error('사용자 상태 업데이트 중 오류:', error);
+        }
+      });
+
+      // 로그아웃 함수를 전역 스코프에 추가
+      window.logout = async function() {
+        try {
+          await auth.signOut();
+          window.location.href = 'index.html';
+        } catch (error) {
+          console.error('로그아웃 중 오류 발생:', error);
+        }
+      };
+    });
+  </script>
+
+</body>
+</html>
