@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>로그인</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f0f4f8;
+    }
+    .login-container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #2980b9;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+    button:hover {
+      background: #3498db;
+    }
+    #login-message {
+      margin-top: 10px;
+      text-align: center;
+      color: #e74c3c;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      display: none;
+    }
+    .success-message {
+      color: #2ecc71 !important;
+      border: 1px solid #2ecc71;
+      background-color: #f0fff4;
+    }
+    .error-message {
+      color: #e74c3c !important;
+      border: 1px solid #e74c3c;
+      background-color: #fff5f5;
+    }
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #ddd;
+    }
+    .divider span {
+      padding: 0 10px;
+      color: #666;
+    }
+    .google-btn {
+      background: white;
+      color: #333;
+      border: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .google-btn:hover {
+      background: #f8f8f8;
+    }
+    .google-btn img {
+      width: 18px;
+      height: 18px;
+      margin-right: 10px;
+    }
+    .forgot-password {
+      text-align: right;
+      margin: 5px 0;
+    }
+    .forgot-password a {
+      color: #2980b9;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .forgot-password a:hover {
+      text-decoration: underline;
+    }
+    .register-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .register-link a {
+      color: #2980b9;
+      text-decoration: none;
+    }
+    .register-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>🔐 로그인</h2>
+    <input type="email" id="email" placeholder="이메일 입력" required>
+    <input type="password" id="password" placeholder="비밀번호 입력" required>
+    <div class="forgot-password">
+      <a href="#" onclick="showResetPassword()">비밀번호를 잊으셨나요?</a>
+    </div>
+    <button onclick="login()">로그인</button>
+    
+    <div class="divider">
+      <span>또는</span>
+    </div>
+    
+    <button class="google-btn" onclick="googleLogin()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+      Google로 계속하기
+    </button>
+    
+    <p id="login-message"></p>
+    <div class="register-link">
+      <a href="register.html">회원가입</a>
+    </div>
+  </div>
+
+  <!-- Firebase SDK 추가 -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Firebase 초기화 설정
+    const firebaseConfig = {
+      apiKey: "AIzaSyBE0r282qiZAoL6MCYbpLt-Zmxp7JDYMVk",
+      authDomain: "test-equilibrifun.firebaseapp.com",
+      projectId: "test-equilibrifun",
+      storageBucket: "test-equilibrifun.firebasestorage.app",
+      messagingSenderId: "804507284339",
+      appId: "1:804507284339:web:d03de182b9e8fadccb0b06",
+      measurementId: "G-HXPF6NZE8D"
+    };
+
+    // Firebase 초기화
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    
+    // Firestore 초기화 및 설정
+    const db = firebase.firestore();
+    
+    // Firestore 설정
+    const settings = {
+      cache: {
+        sizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+      },
+      experimentalForceLongPolling: true
+    };
+    
+    // 설정 적용
+    db.settings(settings);
+
+    // 네트워크 상태 모니터링 및 재연결 시도
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 3;
+
+    window.addEventListener('online', async () => {
+      console.log('온라인 상태로 전환됨');
+      try {
+        await db.enableNetwork();
+        reconnectAttempts = 0;
+      } catch (err) {
+        console.error('네트워크 활성화 실패:', err);
+        if (reconnectAttempts < maxReconnectAttempts) {
+          reconnectAttempts++;
+          setTimeout(() => db.enableNetwork(), 1000 * reconnectAttempts);
+        }
+      }
+    });
+
+    window.addEventListener('offline', async () => {
+      console.log('오프라인 상태로 전환됨');
+      try {
+        await db.disableNetwork();
+      } catch (err) {
+        console.error('네트워크 비활성화 실패:', err);
+      }
+    });
+
+    // 초기 네트워크 상태 확인
+    if (!navigator.onLine) {
+      db.disableNetwork().catch(console.error);
+    }
+  </script>
+
+  <script>
+    window.googleLogin = async function() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      const messageElement = document.getElementById('login-message');
+
+      try {
+        // 구글 로그인 팝업
+        const result = await auth.signInWithPopup(provider);
+        const user = result.user;
+        
+        // Firestore에 사용자 정보 저장
+        const userRef = db.collection('users').doc(user.uid);
+        const userDoc = await userRef.get();
+        
+        if (!userDoc.exists) {
+          // 새 사용자인 경우 정보 저장
+          await userRef.set({
+            name: user.displayName || '이름 없음',
+            email: user.email,
+            userType: 'adult', // 기본값
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            emailVerified: user.emailVerified,
+            profilePicture: user.photoURL,
+            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        } else {
+          // 기존 사용자의 경우 마지막 로그인 시간만 업데이트
+          await userRef.update({
+            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        
+        // 로그인 성공 메시지 표시
+        messageElement.style.color = '#2ecc71';
+        messageElement.textContent = "✅ 구글 로그인 성공! 메인 페이지로 이동합니다...";
+        
+        // 메인 페이지로 이동
+        window.location.replace("../index.html");
+      } catch (error) {
+        console.error('구글 로그인 에러:', error);
+        messageElement.style.color = '#e74c3c';
+        messageElement.textContent = "❌ " + error.message;
+      }
+    };
+
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const messageElement = document.getElementById('login-message');
+
+      if (!email || !password) {
+        messageElement.textContent = '❌ 이메일과 비밀번호를 모두 입력해주세요.';
+        messageElement.className = 'error-message';
+        messageElement.style.display = 'block';
+        return;
+      }
+
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+
+        // 이메일 인증 확인
+        if (!user.emailVerified) {
+          await auth.signOut();
+          messageElement.textContent = '❌ 이메일 인증이 필요합니다.\n\n이메일 인증 절차:\n1. 이메일을 확인해주세요\n2. 인증 링크를 클릭해주세요\n3. 인증이 완료되면 다시 로그인해주세요\n\n인증 메일을 다시 받으시려면 아래 버튼을 클릭해주세요.';
+          messageElement.className = 'error-message';
+          messageElement.style.display = 'block';
+          
+          // 인증 메일 재전송 버튼 추가
+          const resendButton = document.createElement('button');
+          resendButton.textContent = '인증 메일 재전송';
+          resendButton.onclick = async () => {
+            try {
+              await user.sendEmailVerification();
+              messageElement.textContent = '✅ 인증 메일이 재전송되었습니다.\n이메일을 확인해주세요.';
+              messageElement.className = 'success-message';
+            } catch (error) {
+              messageElement.textContent = '❌ 인증 메일 재전송에 실패했습니다.';
+              messageElement.className = 'error-message';
+            }
+          };
+          messageElement.appendChild(resendButton);
+          return;
+        }
+
+        // 로그인 성공 시 메인 페이지로 이동
+        window.location.href = '../index.html';
+      } catch (error) {
+        console.error('로그인 실패:', error);
+        messageElement.className = 'error-message';
+        messageElement.style.display = 'block';
+        
+        if (error.code === 'auth/invalid-login-credentials') {
+          messageElement.textContent = '❌ 이메일 주소 또는 비밀번호가 올바르지 않습니다.';
+        } else if (error.code === 'auth/user-not-found') {
+          messageElement.textContent = '❌ 등록되지 않은 이메일 주소입니다.';
+        } else if (error.code === 'auth/wrong-password') {
+          messageElement.textContent = '❌ 비밀번호가 올바르지 않습니다.';
+        } else if (error.code === 'auth/too-many-requests') {
+          messageElement.textContent = '❌ 너무 많은 로그인 시도가 있었습니다. 잠시 후 다시 시도해주세요.';
+        } else {
+          messageElement.textContent = `❌ 로그인에 실패했습니다: ${error.message}`;
+        }
+      }
+    }
+
+    window.showResetPassword = async function() {
+      const email = document.getElementById('email').value;
+      const messageElement = document.getElementById('login-message');
+      
+      if (!email) {
+        messageElement.textContent = "이메일을 입력해주세요.";
+        return;
+      }
+
+      try {
+        await auth.sendPasswordResetEmail(email);
+        messageElement.style.color = '#2ecc71';
+        messageElement.textContent = "비밀번호 재설정 이메일이 발송되었습니다.";
+      } catch (error) {
+        messageElement.style.color = '#e74c3c';
+        messageElement.textContent = "❌ " + error.message;
+      }
+    };
+  </script>
+</body>
+</html>

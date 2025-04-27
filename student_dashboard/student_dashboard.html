@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>학습 현황 확인</title>
+  <script src="https://www.gstatic.com/firebasejs/8.2.4/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.4/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.4/firebase-firestore.js"></script>
+  <!-- 공통 CSS 추가 -->
+  <link rel="stylesheet" href="../styles/common.css">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+
+    .dashboard-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-info button {
+      padding: 8px 16px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .user-info button:hover {
+      background: #d32f2f;
+    }
+
+    .activity-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .activity-card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .activity-card.completed {
+      border-left: 4px solid #4CAF50;
+    }
+
+    .activity-card.in_progress {
+      border-left: 4px solid #FFC107;
+    }
+
+    .activity-card.not_started {
+      border-left: 4px solid #9E9E9E;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #f0f0f0;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+
+    .progress {
+      height: 100%;
+      background: #4CAF50;
+      border-radius: 5px;
+      transition: width 0.3s ease;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .start-button {
+      display: inline-block;
+      padding: 8px 16px;
+      background: #2196F3;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+
+    .start-button:hover {
+      background: #1976D2;
+    }
+  </style>
+</head>
+<body>
+  <!-- 처음으로 돌아가는 버튼 -->
+  <button class="home-button" onclick="window.location.href='../index.html'">
+    🏠 처음으로
+  </button>
+
+  <div class="dashboard-container">
+    <div class="header">
+      <h1>학생 대시보드</h1>
+      <div class="user-info">
+        <span id="userName"></span>
+        <button onclick="logout()">로그아웃</button>
+      </div>
+    </div>
+
+    <div class="activity-grid">
+      <!-- 활동 카드들이 여기에 표시됩니다 -->
+    </div>
+  </div>
+
+  <script>
+    // Firebase 초기화
+    const firebaseConfig = {
+      apiKey: "AIzaSyBE0r282qiZAoL6MCYbpLt-Zmxp7JDYMVk",
+      authDomain: "test-equilibrifun.firebaseapp.com",
+      projectId: "test-equilibrifun",
+      storageBucket: "test-equilibrifun.appspot.com",
+      messagingSenderId: "804507284339",
+      appId: "1:804507284339:web:d03de182b9e8fadccb0b06"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    const db = firebase.firestore();
+
+    // 사용자 정보 및 활동 상태 로드
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (user) {
+        document.getElementById('userName').textContent = user.displayName || user.email;
+        
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        const userData = userDoc.data();
+        
+        if (userData && userData.activities) {
+          updateActivityCards(userData.activities);
+        }
+      } else {
+        window.location.href = 'login.html';
+      }
+    });
+
+    // 활동 카드 업데이트
+    function updateActivityCards(activities) {
+      const activityGrid = document.querySelector('.activity-grid');
+      activityGrid.innerHTML = '';
+
+      const activityList = [
+        { 
+          id: 'cardgame', 
+          name: '카드게임', 
+          paths: [
+            { path: 'cardgame/web_version/index.html', description: '동시에 카드 뒤집기 게임 시작' },
+            { path: 'cardgame/web_version2/index.html', description: '차례대로 카드 뒤집기 게임 시작' }
+          ]
+        },
+        { 
+          id: 'simulator', 
+          name: '시뮬레이터', 
+          path: 'simulation/암모니아의 생성반응(하버-보슈법)/haber.html',
+          description: '암모니아 합성 시뮬레이터 시작'
+        },
+        { 
+          id: 'test_paper', 
+          name: '만능시험지', 
+          path: 'student_activity/ph_measurement/index.html',
+          description: '산-염기 평형: pH 측정 인공지능'
+        },
+        { 
+          id: 'formative_assessment', 
+          name: '형성평가', 
+          path: 'equilibrium_run/equilibrium_run.html',
+          description: 'equilibrium run 게임 시작'
+        }
+      ];
+
+      activityList.forEach(activity => {
+        const status = activities[activity.id]?.status || 'not_started';
+        const progress = activities[activity.id]?.progress || 0;
+        const completedAt = activities[activity.id]?.completedAt || null;
+
+        const card = document.createElement('div');
+        card.className = `activity-card ${status}`;
+        
+        let buttonsHtml = '';
+        if (activity.id === 'cardgame') {
+          activity.paths.forEach(btn => {
+            buttonsHtml += `<a href="${btn.path}" class="start-button">${btn.description}</a>`;
+          });
+        } else {
+          buttonsHtml = `<a href="${activity.path}" class="start-button">${activity.description}</a>`;
+        }
+
+        card.innerHTML = `
+          <h3>${activity.name}</h3>
+          <div class="progress-bar">
+            <div class="progress" style="width: ${progress}%"></div>
+          </div>
+          <p>진행률: ${progress}%</p>
+          ${completedAt ? `<p>완료일: ${new Date(completedAt).toLocaleDateString()}</p>` : ''}
+          <div class="button-group">
+            ${buttonsHtml}
+          </div>
+        `;
+        activityGrid.appendChild(card);
+      });
+    }
+
+    // 로그아웃
+    function logout() {
+      firebase.auth().signOut().then(() => {
+        window.location.href = 'login.html';
+      });
+    }
+  </script>
+</body>
+</html> 

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>화학평형 카드게임 : 동시에 카드 뒤집기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.4/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.4/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.4/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .game-area {
+            flex: 1;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+
+        .controls {
+            flex: 0 0 300px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats {
+            margin-bottom: 20px;
+        }
+
+        .stats h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .stats p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .rules {
+            margin-top: 20px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .rules h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .rules ul {
+            padding-left: 20px;
+            color: #666;
+        }
+
+        .rules li {
+            margin-bottom: 5px;
+        }
+
+        .complete-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .complete-btn:hover {
+            background-color: #45a049;
+        }
+
+        .complete-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* 처음으로 돌아가는 버튼 스타일 */
+        .home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 12px 24px;
+            background-color: #FF8A65;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .home-button:hover {
+            background-color: #FF7043;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .home-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- 처음으로 돌아가는 버튼 -->
+    <button class="home-button" onclick="window.location.href='../../index.html'">
+      🏠 처음으로
+    </button>
+    
+    <h1>화학 평형 카드게임: 동시에 카드 뒤집기</h1>
+    
+    <div class="game-container">
+        <div class="game-area">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+        </div>
+        
+        <div class="controls">
+            <div class="stats">
+                <h3>현재 상태</h3>
+                <p>턴: <span id="turnCount" style="color: #3498db; font-weight: bold;">0</span>/20</p>
+                <p>빨간색 카드: <span id="redCount" style="color: #e74c3c; font-weight: bold;">49</span></p>
+                <p>파란색 카드: <span id="blueCount" style="color: #3498db; font-weight: bold;">0</span></p>
+            </div>
+            
+            <div class="game-controls">
+                <button id="startGame">게임 시작</button>
+                <button id="nextTurn" disabled>다음 턴</button>
+                <button id="resetGame">게임 리셋</button>
+                <button id="completeBtn" class="complete-btn" onclick="completeActivity()">학습 완료</button>
+            </div>
+            
+            <div class="rules">
+                <h3>게임 규칙</h3>
+                <ul>
+                    <li>게임 시작 버튼을 누르면 빨간색 카드 12장이 자동으로 뒤집힙니다.</li>
+                    <li>스페이스바 또는 버튼으로 다음 턴 진행</li>
+                    <li>빨간색 카드: 4장당 1장이 무작위로 뒤집힘</li>
+                    <li>파란색 카드: 3장당 1장이 무작위로 뒤집힘</li>
+                    <li>2종류의 카드는 동시에 뒤집히며 게임은 20턴까지 진행</li>
+                    <li>'R' 키 또는 버튼으로 게임 리셋</li>
+                    <li>마우스 휠로 확대/축소 가능</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container" style="width: 80%; margin-top: 20px;">
+        <canvas id="resultChart"></canvas>
+    </div>
+
+    <script src="game.js"></script>
+    <script>
+    // Firebase 초기화
+    const firebaseConfig = {
+        // ... 기존 설정 ...
+    };
+
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+
+    const db = firebase.firestore();
+
+    // 활동 완료 함수
+    function completeActivity() {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
+        const userRef = db.collection('users').doc(user.uid);
+        userRef.update({
+            'activities.cardgame': {
+                status: 'completed',
+                progress: 100,
+                completedAt: new Date()
+            }
+        }).then(() => {
+            alert('학습이 완료되었습니다!');
+            window.location.href = '../student_dashboard/student_dashboard.html';
+        }).catch((error) => {
+            console.error('Error updating document: ', error);
+            alert('오류가 발생했습니다. 다시 시도해주세요.');
+        });
+    }
+
+    // 페이지 로드 시 버튼 상태 확인
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            const userData = userDoc.data();
+            
+            if (userData && userData.activities && userData.activities.cardgame) {
+                const completeBtn = document.getElementById('completeBtn');
+                if (userData.activities.cardgame.status === 'completed') {
+                    completeBtn.disabled = true;
+                    completeBtn.textContent = '이미 완료됨';
+                }
+            }
+        }
+    });
+    </script>
+</body>
+</html> 

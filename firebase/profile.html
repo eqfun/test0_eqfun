@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>프로필</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f0f4f8;
+    }
+    .profile-container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .profile-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .profile-picture {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 20px;
+      display: block;
+      cursor: pointer;
+    }
+    .profile-info {
+      margin-bottom: 20px;
+    }
+    .profile-info p {
+      margin: 10px 0;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 5px;
+    }
+    .profile-info .editable {
+      cursor: pointer;
+      position: relative;
+    }
+    .profile-info .editable:hover {
+      background: #e9ecef;
+    }
+    .profile-info .editable::after {
+      content: '✏️';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .edit-form {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 5px;
+    }
+    .edit-form input {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .edit-form button {
+      padding: 8px 12px;
+      margin: 5px 0;
+      background: #2980b9;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .edit-form button:hover {
+      background: #3498db;
+    }
+    .action-buttons {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .action-buttons button {
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      border: none;
+      color: white;
+    }
+    .change-password-btn {
+      background: #2ecc71;
+    }
+    .change-password-btn:hover {
+      background: #27ae60;
+    }
+    .delete-account-btn {
+      background: #e74c3c;
+    }
+    .delete-account-btn:hover {
+      background: #c0392b;
+    }
+    .user-type {
+      display: inline-block;
+      padding: 5px 10px;
+      background: #2980b9;
+      color: white;
+      border-radius: 15px;
+      font-size: 0.9em;
+    }
+    .character-selection {
+      display: none;
+      margin-top: 20px;
+      text-align: center;
+    }
+    .character-option {
+      width: 100px;
+      height: 100px;
+      margin: 10px;
+      cursor: pointer;
+      border-radius: 50%;
+      border: 2px solid transparent;
+    }
+    .character-option:hover {
+      border-color: #2980b9;
+    }
+    .character-option.selected {
+      border-color: #2980b9;
+    }
+    button {
+      padding: 10px;
+      background: #2980b9;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+    button:hover {
+      background: #3498db;
+    }
+    .back-button {
+      background: #95a5a6;
+    }
+    .back-button:hover {
+      background: #7f8c8d;
+    }
+    /* 프로필 이미지 스타일 */
+    .profile-image {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    
+    .profile-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .profile-image-placeholder {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+    
+    .profile-image-placeholder::before {
+      content: "👤";
+      font-size: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div id="connection-status" style="position: fixed; top: 10px; right: 10px; padding: 5px 10px; background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+    연결 상태 확인 중...
+  </div>
+  <div class="profile-container">
+    <div class="profile-header">
+      <img id="profile-picture" class="profile-picture" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNTAgMTUwIj48Y2lyY2xlIGN4PSI3NSIgY3k9Ijc1IiByPSI2MCIgZmlsbD0iI2UwZTBlMCIvPjx0ZXh0IHg9Ijc1IiB5PSI3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjYwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZmlsbD0iIzk5OSI+4pi4PC90ZXh0Pjwvc3ZnPg==" alt="프로필 사진">
+      <input type="file" id="profile-upload" accept="image/*" style="display: none;">
+      <h2 id="user-name">사용자 이름</h2>
+      <span id="user-type-badge" class="user-type">회원 유형</span>
+    </div>
+
+    <div class="profile-info">
+      <p class="editable" onclick="showEditForm('name')">이름: <span id="display-name"></span></p>
+      <div id="name-edit-form" class="edit-form">
+        <input type="text" id="edit-name" placeholder="새 이름 입력">
+        <button onclick="updateName()">저장</button>
+        <button onclick="hideEditForm('name')">취소</button>
+      </div>
+      
+      <p>이메일: <span id="user-email"></span> <span id="email-verified-badge"></span></p>
+      <p>가입일: <span id="join-date"></span></p>
+      <p class="editable" onclick="showEditForm('userType')">회원 유형: <span id="user-type-display"></span></p>
+      <div id="userType-edit-form" class="edit-form">
+        <select id="edit-userType">
+          <option value="elementary">초등학생</option>
+          <option value="middle">중학생</option>
+          <option value="high">고등학생</option>
+          <option value="teacher">교사</option>
+          <option value="adult">성인</option>
+        </select>
+        <button onclick="updateUserType()">저장</button>
+        <button onclick="hideEditForm('userType')">취소</button>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="change-password-btn" onclick="showChangePasswordForm()">비밀번호 변경</button>
+      <button class="delete-account-btn" onclick="showDeleteAccountConfirmation()">회원 탈퇴</button>
+    </div>
+
+    <div id="change-password-form" class="edit-form" style="display: none;">
+      <h3>비밀번호 변경</h3>
+      <input type="password" id="current-password" placeholder="현재 비밀번호">
+      <input type="password" id="new-password" placeholder="새 비밀번호">
+      <input type="password" id="confirm-new-password" placeholder="새 비밀번호 확인">
+      <button onclick="changePassword()">변경</button>
+      <button onclick="hideChangePasswordForm()">취소</button>
+    </div>
+
+    <div id="delete-account-form" class="edit-form" style="display: none;">
+      <h3>회원 탈퇴</h3>
+      <p>정말로 회원 탈퇴를 하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
+      <input type="password" id="delete-account-password" placeholder="비밀번호 입력">
+      <button onclick="deleteAccount()">탈퇴</button>
+      <button onclick="hideDeleteAccountForm()">취소</button>
+    </div>
+
+    <div class="character-selection" id="character-selection">
+      <h3>캐릭터 선택</h3>
+      <div>
+        <img src="images/character1.png" class="character-option" data-char="1">
+        <img src="images/character2.png" class="character-option" data-char="2">
+        <img src="images/character3.png" class="character-option" data-char="3">
+      </div>
+      <button onclick="saveCharacter()">캐릭터 선택 완료</button>
+    </div>
+
+    <button class="back-button" onclick="window.location.href='../index.html'">홈으로 돌아가기</button>
+  </div>
+
+  <!-- Firebase SDK 추가 -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+
+  <script>
+    // 전역 변수 선언
+    let auth, db, storage;
+
+    // Firebase 초기화
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Firebase 초기화 설정
+      const firebaseConfig = {
+        apiKey: "AIzaSyBE0r282qiZAoL6MCYbpLt-Zmxp7JDYMVk",
+        authDomain: "test-equilibrifun.firebaseapp.com",
+        projectId: "test-equilibrifun",
+        storageBucket: "test-equilibrifun.firebasestorage.app",
+        messagingSenderId: "804507284339",
+        appId: "1:804507284339:web:d03de182b9e8fadccb0b06",
+        measurementId: "G-HXPF6NZE8D"
+      };
+
+      // Firebase 초기화
+      firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      db = firebase.firestore();
+      storage = firebase.storage();
+
+      try {
+        // Firestore 설정
+        db.settings({
+          cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
+          merge: true,
+          experimentalAutoDetectLongPolling: true,
+          useFetchStreams: false,
+          ignoreUndefinedProperties: true,
+          cache: {
+            type: 'persistent',
+            synchronizeTabs: true
+          }
+        });
+
+        // 연결 상태 모니터링
+        const connectionStatus = document.getElementById('connection-status');
+        
+        // 초기 연결 상태 설정
+        connectionStatus.textContent = '연결 중...';
+        connectionStatus.style.color = 'orange';
+
+        // 연결 상태 변경 감지
+        db.collection('connection_test').doc('status').onSnapshot({
+          next: () => {
+            connectionStatus.textContent = '온라인';
+            connectionStatus.style.color = 'green';
+          },
+          error: () => {
+            connectionStatus.textContent = '오프라인';
+            connectionStatus.style.color = 'red';
+          }
+        });
+
+        // 사용자 정보 로드
+        auth.onAuthStateChanged(async (user) => {
+          if (!user) {
+            window.location.href = 'login.html';
+            return;
+          }
+
+          const userDoc = await db.collection('users').doc(user.uid).get();
+          const userData = userDoc.data();
+
+          // 사용자 정보 표시
+          displayUserInfo({
+            ...userData,
+            email: user.email,
+            emailVerified: user.emailVerified
+          });
+        });
+
+      } catch (error) {
+        console.error('Firestore 설정 중 오류 발생:', error);
+        document.getElementById('connection-status').textContent = '연결 오류';
+        document.getElementById('connection-status').style.color = 'red';
+      }
+    });
+
+    // 프로필 이미지 기본값 설정
+    const defaultProfileImage = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0iI2UwZTBlMCIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZmlsbD0iIzk5OSI+4pi4PC90ZXh0Pjwvc3ZnPg==';
+
+    // 사용자 정보 표시
+    function displayUserInfo(user) {
+      // 기본 정보 표시
+      document.getElementById('user-name').textContent = user.name || '이름 없음';
+      document.getElementById('display-name').textContent = user.name || '이름 없음';
+      document.getElementById('user-email').textContent = user.email || '이메일 없음';
+      document.getElementById('user-type-display').textContent = getUserTypeText(user.userType) || '회원구분 없음';
+      document.getElementById('user-type-badge').textContent = getUserTypeText(user.userType) || '회원구분 없음';
+      
+      // 가입일 표시
+      if (user.createdAt) {
+        const joinDate = user.createdAt.toDate();
+        document.getElementById('join-date').textContent = joinDate.toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      } else {
+        document.getElementById('join-date').textContent = '알 수 없음';
+      }
+      
+      // 이메일 인증 상태 표시
+      const emailVerifiedBadge = document.getElementById('email-verified-badge');
+      if (user.emailVerified) {
+        emailVerifiedBadge.textContent = '✅';
+        emailVerifiedBadge.title = '이메일 인증 완료';
+      } else {
+        emailVerifiedBadge.textContent = '❌';
+        emailVerifiedBadge.title = '이메일 인증 필요';
+      }
+      
+      // 프로필 사진 표시
+      const profilePicture = document.getElementById('profile-picture');
+      if (user.profilePicture) {
+        profilePicture.src = user.profilePicture;
+        document.getElementById('character-selection').style.display = 'none';
+      } else if (user.defaultCharacter) {
+        profilePicture.src = defaultProfileImage;
+        document.getElementById('character-selection').style.display = 'none';
+      } else {
+        profilePicture.src = defaultProfileImage;
+        document.getElementById('character-selection').style.display = 'block';
+      }
+    }
+
+    function getUserTypeText(type) {
+      const types = {
+        'elementary': '초등학생',
+        'middle': '중학생',
+        'high': '고등학생',
+        'teacher': '교사',
+        'adult': '성인'
+      };
+      return types[type] || type;
+    }
+
+    // 프로필 사진 업로드
+    document.getElementById('profile-picture').addEventListener('click', () => {
+      document.getElementById('profile-upload').click();
+    });
+
+    document.getElementById('profile-upload').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // 파일 크기 제한 (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('❌ 파일 크기는 5MB를 초과할 수 없습니다.');
+        return;
+      }
+
+      // 파일 형식 검사
+      if (!file.type.match('image.*')) {
+        alert('❌ 이미지 파일만 업로드 가능합니다.');
+        return;
+      }
+
+      try {
+        const user = auth.currentUser;
+        const storageRef = storage.ref(`profile_pictures/${user.uid}`);
+        await storageRef.put(file);
+        const downloadURL = await storageRef.getDownloadURL();
+
+        // Firestore에 프로필 사진 URL 저장
+        await db.collection('users').doc(user.uid).update({
+          profilePicture: downloadURL
+        });
+
+        // 프로필 사진 업데이트
+        document.getElementById('profile-picture').src = downloadURL;
+        document.getElementById('character-selection').style.display = 'none';
+      } catch (error) {
+        console.error('프로필 사진 업로드 실패:', error);
+        alert('프로필 사진 업로드에 실패했습니다.');
+      }
+    });
+
+    // 캐릭터 선택
+    let selectedCharacter = null;
+    document.querySelectorAll('.character-option').forEach(option => {
+      option.addEventListener('click', () => {
+        document.querySelectorAll('.character-option').forEach(opt => opt.classList.remove('selected'));
+        option.classList.add('selected');
+        selectedCharacter = option.dataset.char;
+      });
+    });
+
+    async function saveCharacter() {
+      if (!selectedCharacter) {
+        alert('캐릭터를 선택해주세요.');
+        return;
+      }
+
+      try {
+        const user = auth.currentUser;
+        const userRef = db.collection('users').doc(user.uid);
+        const userDoc = await userRef.get();
+
+        // 선택한 캐릭터의 이미지 URL
+        const selectedImage = document.querySelector(`.character-option[data-char="${selectedCharacter}"]`).src;
+
+        if (!userDoc.exists) {
+          // 사용자 문서가 없으면 새로 생성
+          await userRef.set({
+            name: user.displayName || '이름 없음',
+            email: user.email,
+            userType: 'elementary', // 기본값
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            emailVerified: user.emailVerified,
+            lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+            defaultCharacter: selectedCharacter,
+            profilePicture: selectedImage
+          });
+        } else {
+          // 사용자 문서가 있으면 업데이트
+          await userRef.update({
+            defaultCharacter: selectedCharacter,
+            profilePicture: selectedImage
+          });
+        }
+
+        // 프로필 이미지 업데이트
+        document.getElementById('profile-picture').src = selectedImage;
+        document.getElementById('character-selection').style.display = 'none';
+        alert('캐릭터가 선택되었습니다.');
+      } catch (error) {
+        console.error('캐릭터 저장 실패:', error);
+        alert('캐릭터 저장에 실패했습니다.');
+      }
+    }
+
+    // 이름 수정 관련 함수
+    function showEditForm(field) {
+      document.getElementById(`${field}-edit-form`).style.display = 'block';
+      if (field === 'userType') {
+        const currentType = document.getElementById('user-type-display').textContent;
+        const select = document.getElementById('edit-userType');
+        for (let i = 0; i < select.options.length; i++) {
+          if (select.options[i].text === currentType) {
+            select.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    }
+
+    function hideEditForm(field) {
+      document.getElementById(`${field}-edit-form`).style.display = 'none';
+    }
+
+    async function updateName() {
+      const newName = document.getElementById('edit-name').value;
+      if (!newName) {
+        alert('이름을 입력해주세요.');
+        return;
+      }
+
+      try {
+        const user = auth.currentUser;
+        await db.collection('users').doc(user.uid).update({
+          name: newName
+        });
+        document.getElementById('user-name').textContent = newName;
+        document.getElementById('display-name').textContent = newName;
+        hideEditForm('name');
+        alert('이름이 변경되었습니다.');
+      } catch (error) {
+        console.error('이름 변경 실패:', error);
+        alert('이름 변경에 실패했습니다.');
+      }
+    }
+
+    // 비밀번호 변경 관련 함수
+    function showChangePasswordForm() {
+      document.getElementById('change-password-form').style.display = 'block';
+    }
+
+    function hideChangePasswordForm() {
+      document.getElementById('change-password-form').style.display = 'none';
+    }
+
+    async function changePassword() {
+      const currentPassword = document.getElementById('current-password').value;
+      const newPassword = document.getElementById('new-password').value;
+      const confirmNewPassword = document.getElementById('confirm-new-password').value;
+
+      if (!currentPassword || !newPassword || !confirmNewPassword) {
+        alert('모든 필드를 입력해주세요.');
+        return;
+      }
+
+      if (newPassword !== confirmNewPassword) {
+        alert('새 비밀번호가 일치하지 않습니다.');
+        return;
+      }
+
+      try {
+        const user = auth.currentUser;
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+        await user.reauthenticateWithCredential(credential);
+        await user.updatePassword(newPassword);
+        alert('비밀번호가 변경되었습니다.');
+        hideChangePasswordForm();
+      } catch (error) {
+        console.error('비밀번호 변경 실패:', error);
+        alert('비밀번호 변경에 실패했습니다. 현재 비밀번호가 올바른지 확인해주세요.');
+      }
+    }
+
+    // 회원 탈퇴 관련 함수
+    function showDeleteAccountConfirmation() {
+      document.getElementById('delete-account-form').style.display = 'block';
+    }
+
+    function hideDeleteAccountForm() {
+      document.getElementById('delete-account-form').style.display = 'none';
+    }
+
+    async function deleteAccount() {
+      const password = document.getElementById('delete-account-password').value;
+      if (!password) {
+        alert('비밀번호를 입력해주세요.');
+        return;
+      }
+
+      if (!confirm('정말로 회원 탈퇴를 하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+        return;
+      }
+
+      try {
+        const user = auth.currentUser;
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+        await user.reauthenticateWithCredential(credential);
+        
+        // Firestore에서 사용자 데이터 삭제
+        await db.collection('users').doc(user.uid).delete();
+        
+        // 사용자 계정 삭제
+        await user.delete();
+        
+        alert('회원 탈퇴가 완료되었습니다.');
+        window.location.href = 'login.html';
+      } catch (error) {
+        console.error('회원 탈퇴 실패:', error);
+        alert('회원 탈퇴에 실패했습니다. 비밀번호가 올바른지 확인해주세요.');
+      }
+    }
+
+    async function updateUserType() {
+      const newType = document.getElementById('edit-userType').value;
+      const user = auth.currentUser;
+      
+      try {
+        const userRef = db.collection('users').doc(user.uid);
+        const userDoc = await userRef.get();
+
+        if (!userDoc.exists) {
+          // 사용자 문서가 없으면 새로 생성
+          await userRef.set({
+            name: user.displayName || '이름 없음',
+            email: user.email,
+            userType: newType,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            emailVerified: user.emailVerified,
+            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        } else {
+          // 사용자 문서가 있으면 업데이트
+          await userRef.update({
+            userType: newType
+          });
+        }
+        
+        document.getElementById('user-type-display').textContent = getUserTypeText(newType);
+        document.getElementById('user-type-badge').textContent = getUserTypeText(newType);
+        hideEditForm('userType');
+        alert('회원 유형이 성공적으로 변경되었습니다.');
+      } catch (error) {
+        console.error('회원 유형 변경 실패:', error);
+        alert('회원 유형 변경에 실패했습니다. 다시 시도해주세요.');
+      }
+    }
+  </script>
+</body>
+</html> 

@@ -1,0 +1,52 @@
+[
+  {
+    "question": "콜라를 따면 기포가 생기는 건 평형이 깨졌기 때문이다.",
+    "type": "OX",
+    "answer": "O"
+  },
+  {
+    "question": "물이 얼음으로 변하는 것은 화학 평형의 예이다.",
+    "type": "OX",
+    "answer": "O"
+  },
+  {
+    "question": "화학 평형에서는 반응이 완전히 멈춘다.",
+    "type": "OX",
+    "answer": "X"
+  },
+  {
+    "question": "평형 상태에서는 정반응과 역반응이 동시에 일어난다.",
+    "type": "OX",
+    "answer": "O"
+  },
+  {
+    "question": "물이 끓는 것은 화학 평형의 예이다.",
+    "type": "OX",
+    "answer": "O"
+  },
+  {
+    "question": "평형 상태에서는 반응물과 생성물의 양이 항상 같다.",
+    "type": "OX",
+    "answer": "X"
+  },
+  {
+    "question": "물이 증발하는 것은 화학 평형의 예이다.",
+    "type": "OX",
+    "answer": "O"
+  },
+  {
+    "question": "평형 상태에서는 반응이 더 이상 진행되지 않는다.",
+    "type": "OX",
+    "answer": "X"
+  },
+  {
+    "question": "물이 얼음으로 변할 때 열이 방출된다.",
+    "type": "OX",
+    "answer": "O"
+  },
+  {
+    "question": "평형 상태에서는 반응물과 생성물의 농도가 변하지 않는다.",
+    "type": "OX",
+    "answer": "O"
+  }
+]

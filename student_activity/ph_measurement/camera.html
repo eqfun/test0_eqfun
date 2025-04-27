@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>산-염기 평형: pH 측정 인공지능</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f4f8;
+            margin: 0;
+            padding: 40px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .camera-instructions {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .camera-instructions h2 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .camera-instructions ol {
+            padding-left: 20px;
+            margin-bottom: 0;
+        }
+        
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .mode-button {
+            padding: 15px 30px;
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            width: 200px;
+        }
+        
+        .mode-button:hover {
+            background: #bbdefb;
+        }
+        
+        .mode-button.active {
+            background: #2196f3;
+            color: white;
+        }
+        
+        .mode-button i {
+            font-size: 24px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .mode-content {
+            display: none;
+        }
+        
+        .mode-content.active {
+            display: block;
+        }
+        
+        .upload-instructions {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .upload-area {
+            border: 2px dashed #2196f3;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .upload-area:hover {
+            background: #e3f2fd;
+        }
+        
+        .upload-area i {
+            font-size: 48px;
+            color: #2196f3;
+            margin-bottom: 10px;
+        }
+        
+        .upload-area p {
+            margin: 0;
+            color: #666;
+        }
+        
+        .camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            margin-bottom: 20px;
+        }
+        
+        .camera-container video {
+            width: 100%;
+            border-radius: 8px;
+        }
+        
+        .camera-container canvas {
+            display: none;
+        }
+        
+        .camera-container img {
+            display: none;
+            width: 100%;
+            border-radius: 8px;
+        }
+        
+        .detection-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 60%;
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+        
+        .status-message {
+            text-align: center;
+            margin: 10px 0;
+            color: #2c3e50;
+        }
+        
+        .progress-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 0%;
+            height: 20px;
+            background: #2196f3;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            margin-top: 5px;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .preview-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto;
+            display: none;
+            position: relative;
+            overflow: auto;
+        }
+        
+        .preview-image {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: crosshair;
+            max-height: 600px;
+            object-fit: contain;
+        }
+        
+        .selection-box {
+            position: absolute;
+            border: 2px solid #2196f3;
+            background: rgba(33, 150, 243, 0.1);
+            pointer-events: none;
+            display: none;
+            border-radius: 4px;
+        }
+        
+        .selection-handle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #2196f3;
+            border-radius: 50%;
+            pointer-events: all;
+            cursor: move;
+            border: 2px solid white;
+        }
+        
+        .selection-handle.top-left { top: -5px; left: -5px; }
+        .selection-handle.top-right { top: -5px; right: -5px; }
+        .selection-handle.bottom-left { bottom: -5px; left: -5px; }
+        .selection-handle.bottom-right { bottom: -5px; right: -5px; }
+        
+        .instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .instructions h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+            margin: 0;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .instructions .highlight {
+            background: #e3f2fd;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .preview-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .preview-button {
+            padding: 8px 16px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .preview-button:hover {
+            background: #1976d2;
+        }
+        
+        .preview-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .time-estimate {
+            text-align: center;
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .action-button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .action-button:hover {
+            background: #1976d2;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .nav-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 5px;
+            border-radius: 4px;
+            display: flex;
+            gap: 5px;
+            z-index: 100;
+        }
+
+        .zoom-button {
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: #2196f3;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* 처음으로 돌아가는 버튼 스타일 */
+        .home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 12px 24px;
+            background-color: #FF8A65;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .home-button:hover {
+            background-color: #FF7043;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .home-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+    <script src="https://docs.opencv.org/4.5.5/opencv.js"></script>
+</head>
+<body>
+    <!-- 처음으로 돌아가는 버튼 -->
+    <button class="home-button" onclick="window.location.href='../../index.html'">
+        🏠 처음으로
+    </button>
+
+    <div class="container">
+        <h1>📸 변색된 만능 시험지 이미지(사진) 자료 수집</h1>
+        
+        <div class="mode-selector">
+            <div class="mode-button active" id="cameraMode">
+                <i>📷</i>
+                <h3>카메라로 찍기</h3>
+                <p>카메라를 사용하여 직접 촬영</p>
+            </div>
+            <div class="mode-button" id="uploadMode">
+                <i>📁</i>
+                <h3>사진 업로드</h3>
+                <p>기존 사진을 선택하여 업로드</p>
+            </div>
+        </div>
+
+        <div class="mode-content active" id="cameraContent">
+        <div class="camera-instructions">
+                <h2>카메라로 사진 찍는 방법</h2>
+                <ol>
+                    <li>만능시험지를 흰색 배경 앞에 놓아주세요</li>
+                    <li>카메라를 시험지에 가까이 대주세요</li>
+                    <li>시험지가 파란색 네모 안에 들어가도록 해주세요</li>
+                    <li>사진이 잘 보이면 "사진 찍기" 버튼을 눌러주세요</li>
+            </ol>
+        </div>
+
+        <div class="camera-container">
+            <video id="video" autoplay playsinline></video>
+                <canvas id="canvas" style="display: none;"></canvas>
+                <img id="captured-image" style="display: none;">
+            <div class="detection-box"></div>
+                <canvas id="debug" style="display: none;"></canvas>
+            </div>
+
+            <div class="button-container">
+                <button id="capture-btn" class="action-button">사진 찍기</button>
+                <button id="retake-btn" class="action-button" style="display: none;">다시 찍기</button>
+            </div>
+        </div>
+
+        <div class="mode-content" id="uploadContent">
+            <div class="upload-instructions">
+                <h2>사진 업로드 방법</h2>
+                <p>만능시험지가 잘 보이는 사진을 선택해주세요</p>
+            </div>
+
+            <div class="upload-area" id="uploadArea">
+                <i>📁</i>
+                <p>사진을 여기에 끌어다 놓거나</p>
+                <p>아래 버튼을 클릭하여 선택하세요</p>
+                <input type="file" id="file-input" accept="image/*" style="display: none;">
+        </div>
+
+        <div class="button-container">
+                <button id="upload-btn" class="action-button">사진 선택</button>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h2>📝 사용 방법</h2>
+            <ol>
+                <li>사진을 찍거나 업로드한 후, 만능시험지가 잘 보이는 사진이 표시됩니다.</li>
+                <li>마우스로 드래그하여 <span class="highlight">시험지 영역을 선택</span>해주세요.</li>
+                <li>선택한 영역의 모서리를 드래그하여 <span class="highlight">크기와 위치를 조정</span>할 수 있습니다.</li>
+                <li>시험지 영역이 정확하게 선택되면 <span class="highlight">"이미지 처리하기"</span> 버튼을 클릭해주세요.</li>
+                <li>처리가 완료되면 자동으로 다음 단계로 이동합니다.</li>
+            </ol>
+        </div>
+
+        <div class="preview-container" id="previewContainer">
+            <div class="zoom-controls">
+                <button class="zoom-button" id="zoomIn">+</button>
+                <button class="zoom-button" id="zoomOut">-</button>
+            </div>
+            <img id="previewImage" class="preview-image">
+            <div class="selection-box" id="selectionBox">
+                <div class="selection-handle top-left"></div>
+                <div class="selection-handle top-right"></div>
+                <div class="selection-handle bottom-left"></div>
+                <div class="selection-handle bottom-right"></div>
+            </div>
+            <div class="preview-controls">
+                <button id="processImage" class="preview-button" disabled>이미지 처리하기</button>
+                <button id="cancelPreview" class="preview-button">취소</button>
+            </div>
+        </div>
+
+        <div id="status" class="status-message"></div>
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+            <div class="progress-text" id="progressText">처리 중: 0%</div>
+            <div class="time-estimate" id="timeEstimate">예상 소요시간: 2-3초</div>
+        </div>
+
+        <div class="navigation-buttons">
+            <button onclick="location.href='index.html'" class="nav-button">활동의 처음으로</button>
+            <button id="next-btn" onclick="location.href='measurement.html'" class="nav-button" disabled>다음으로</button>
+        </div>
+    </div>
+
+    <script>
+        let stream = null;
+        let capturedImage = null;
+        let opencvReady = false;
+        let currentZoom = 1.0;
+        let isSelecting = false;
+        let isResizing = false;
+        let startX, startY;
+        let selectionBox = document.getElementById('selectionBox');
+        let previewImage = document.getElementById('previewImage');
+        let processButton = document.getElementById('processImage');
+        let handles = selectionBox.querySelectorAll('.selection-handle');
+        let currentHandle = null;
+
+        // OpenCV.js 로드 상태 확인
+        function onOpenCVReady() {
+            opencvReady = true;
+            console.log('OpenCV.js가 준비되었습니다.');
+        }
+
+        // OpenCV.js 로드 실패 처리
+        function onOpenCVError() {
+            console.error('OpenCV.js 로드에 실패했습니다.');
+            alert('이미지 처리를 위한 라이브러리 로드에 실패했습니다. 페이지를 새로고침해주세요.');
+        }
+
+        // OpenCV.js 초기화
+        window.onload = function() {
+            cv['onRuntimeInitialized'] = onOpenCVReady;
+            cv['onError'] = onOpenCVError;
+        };
+
+        // 카메라 접근
+        async function startCamera() {
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('카메라 접근이 지원되지 않는 브라우저입니다.');
+                }
+
+                const constraints = {
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'environment'
+                    }
+                };
+
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                video.play();
+                
+                return true;
+            } catch (err) {
+                console.error('카메라 접근 오류:', err);
+                alert('카메라에 접근할 수 없어요. 카메라 권한을 확인해주세요!');
+                return false;
+            }
+        }
+
+        // 만능시험지 인식 함수
+        async function detectPaper(imageData, selection = null) {
+            if (!opencvReady) {
+                alert('이미지 처리를 위한 라이브러리가 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.');
+                return;
+            }
+
+            const startTime = performance.now();
+            let img = null;
+            let resized = null;
+            let roi = null;
+
+            try {
+                const progressContainer = document.getElementById('progressContainer');
+                const progressBar = document.getElementById('progressBar');
+                const progressText = document.getElementById('progressText');
+                const timeEstimate = document.getElementById('timeEstimate');
+                
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '10%';
+                progressText.textContent = '처리 중: 10%';
+                timeEstimate.textContent = '예상 소요시간: 1-2초';
+                
+                // 이미지 로드
+                img = await new Promise((resolve, reject) => {
+                    let imgElement = new Image();
+                    imgElement.onload = () => {
+                        try {
+                            let mat = cv.imread(imgElement);
+                            resolve(mat);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    };
+                    imgElement.onerror = reject;
+                    imgElement.src = imageData;
+                });
+
+                if (!img || img.empty()) {
+                    throw new Error('이미지 로드에 실패했습니다.');
+                }
+
+                progressBar.style.width = '30%';
+                progressText.textContent = '처리 중: 30%';
+
+                // 이미지 크기 조정
+                resized = new cv.Mat();
+                const targetWidth = 800;
+                const targetHeight = Math.round(img.rows * (targetWidth / img.cols));
+                cv.resize(img, resized, new cv.Size(targetWidth, targetHeight), 0, 0, cv.INTER_AREA);
+
+                if (selection) {
+                    // 좌표 변환 시 실제 이미지 크기 사용
+                    const scaleX = resized.cols / previewImage.naturalWidth;
+                    const scaleY = resized.rows / previewImage.naturalHeight;
+                    const x = Math.floor(Math.min(selection.startX, selection.endX) * scaleX);
+                    const y = Math.floor(Math.min(selection.startY, selection.endY) * scaleY);
+                    const width = Math.floor(Math.abs(selection.endX - selection.startX) * scaleX);
+                    const height = Math.floor(Math.abs(selection.endY - selection.startY) * scaleY);
+                    // ROI가 이미지 경계를 벗어나지 않도록 제한
+                    const x1 = Math.max(0, Math.min(x, resized.cols - 1));
+                    const y1 = Math.max(0, Math.min(y, resized.rows - 1));
+                    const w = Math.max(1, Math.min(width, resized.cols - x1));
+                    const h = Math.max(1, Math.min(height, resized.rows - y1));
+
+                    // ROI 추출
+                    const rect = new cv.Rect(x1, y1, w, h);
+                    roi = resized.roi(rect);
+
+                    // ROI의 평균 색상 계산 (BGR)
+                    const mean = cv.mean(roi); // [B, G, R, A]
+                    console.log('ROI mean (BGR):', mean);
+
+                    // BGR → RGB 변환 (canvas와 일치하도록)
+                    const rgb = {
+                        red: Math.round(mean[0]),   // B
+                        green: Math.round(mean[1]), // G
+                        blue: Math.round(mean[2])   // R
+                    };
+                    console.log('ROI mean (RGB):', rgb);
+
+                    // 결과 저장
+                    const results = [{
+                        index: 1,
+                        rgb: rgb,
+                        position: { x: x1, y: y1, width: w, height: h }
+                    }];
+                    localStorage.setItem('phResults', JSON.stringify(results));
+
+                    // 디버그 이미지 저장 (BGR → RGB 변환 후 저장)
+                    let canvas = document.createElement('canvas');
+                    canvas.width = resized.cols;
+                    canvas.height = resized.rows;
+                    let rgbMat = new cv.Mat();
+                    cv.cvtColor(resized, rgbMat, cv.COLOR_BGR2RGB);
+                    cv.imshow(canvas, rgbMat);
+                    rgbMat.delete();
+                    localStorage.setItem('phImage', canvas.toDataURL('image/jpeg'));
+                    
+                    // ROI 이미지를 별도로 저장
+                    let roiCanvas = document.createElement('canvas');
+                    roiCanvas.width = w;
+                    roiCanvas.height = h;
+                    let roiCtx = roiCanvas.getContext('2d');
+                    let roiRgbMat = new cv.Mat();
+                    cv.cvtColor(roi, roiRgbMat, cv.COLOR_BGR2RGB);
+                    cv.imshow(roiCanvas, roiRgbMat);
+                    roiRgbMat.delete();
+                    localStorage.setItem('phRoiImage', roiCanvas.toDataURL('image/jpeg'));
+                    
+                    const endTime = performance.now();
+                    const processingTime = ((endTime - startTime) / 1000).toFixed(2);
+                    
+                    progressBar.style.width = '100%';
+                    progressText.textContent = '처리 완료!';
+                    timeEstimate.textContent = `실제 소요시간: ${processingTime}초`;
+                    
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        document.getElementById('status').textContent = '시험지가 성공적으로 분석되었습니다!';
+                        document.getElementById('next-btn').disabled = false;
+                    }, 500);
+                    
+                } else {
+                    progressContainer.style.display = 'none';
+                    document.getElementById('status').textContent = '시험지 영역을 선택해주세요!';
+                    document.getElementById('next-btn').disabled = true;
+                }
+                
+            } catch (err) {
+                console.error('이미지 처리 오류:', err);
+                document.getElementById('status').textContent = '이미지 처리 중 오류가 발생했습니다.';
+                document.getElementById('progressContainer').style.display = 'none';
+                alert('이미지 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+            } finally {
+                // 메모리 해제
+                if (img) img.delete();
+                if (resized) resized.delete();
+                if (roi) roi.delete();
+            }
+        }
+
+        // 모드 전환 처리
+        document.getElementById('cameraMode').addEventListener('click', () => {
+            document.getElementById('cameraMode').classList.add('active');
+            document.getElementById('uploadMode').classList.remove('active');
+            document.getElementById('cameraContent').classList.add('active');
+            document.getElementById('uploadContent').classList.remove('active');
+            startCamera();
+        });
+
+        document.getElementById('uploadMode').addEventListener('click', () => {
+            document.getElementById('uploadMode').classList.add('active');
+            document.getElementById('cameraMode').classList.remove('active');
+            document.getElementById('uploadContent').classList.add('active');
+            document.getElementById('cameraContent').classList.remove('active');
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+
+        // 드래그 앤 드롭 처리
+        const uploadArea = document.getElementById('uploadArea');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = '#e3f2fd';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.background = '';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = '';
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        function handleFile(file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert('파일 크기는 5MB를 초과할 수 없습니다.');
+                return;
+            }
+
+            if (!file.type.match('image.*')) {
+                alert('이미지 파일만 업로드 가능합니다.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const previewImage = document.getElementById('previewImage');
+                previewImage.src = e.target.result;
+                document.getElementById('previewContainer').style.display = 'block';
+                document.getElementById('uploadContent').style.display = 'none';
+                // 원본 이미지 저장
+                localStorage.setItem('phOriginalImage', e.target.result);
+                console.log('업로드 원본 저장:', e.target.result.slice(0, 100));
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 사진 촬영
+        document.getElementById('capture-btn').addEventListener('click', async () => {
+            try {
+                const video = document.getElementById('video');
+                const canvas = document.getElementById('canvas');
+                const capturedImage = document.getElementById('captured-image');
+                const previewImage = document.getElementById('previewImage');
+                const previewContainer = document.getElementById('previewContainer');
+                
+                if (!video.videoWidth || !video.videoHeight) {
+                    throw new Error('카메라가 준비되지 않았습니다.');
+                }
+
+                // 캔버스 크기 설정
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                // 비디오 프레임을 캔버스에 그리기
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // 캡처된 이미지 표시
+                const imageData = canvas.toDataURL('image/jpeg');
+                capturedImage.src = imageData;
+                previewImage.src = imageData;
+                
+                // 원본 이미지 저장
+                localStorage.setItem('phOriginalImage', imageData);
+                console.log('촬영 원본 저장:', imageData.slice(0, 100));
+                
+                // 미리보기 컨테이너 표시
+                previewContainer.style.display = 'block';
+                video.style.display = 'none';
+                capturedImage.style.display = 'none';
+                
+                // 버튼 상태 변경
+                document.getElementById('capture-btn').style.display = 'none';
+                document.getElementById('retake-btn').style.display = 'inline-block';
+                
+                // 선택 영역 초기화
+                resetSelection();
+                
+            } catch (error) {
+                console.error('사진 촬영 오류:', error);
+                alert('사진 촬영 중 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+        });
+
+        // 다시 찍기
+        document.getElementById('retake-btn').addEventListener('click', async () => {
+            try {
+                const video = document.getElementById('video');
+                const previewContainer = document.getElementById('previewContainer');
+                
+                // 비디오 스트림 재시작
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                
+                const success = await startCamera();
+                if (success) {
+                    video.style.display = 'block';
+                    previewContainer.style.display = 'none';
+                    
+                    document.getElementById('capture-btn').style.display = 'inline-block';
+                    document.getElementById('retake-btn').style.display = 'none';
+                    document.getElementById('next-btn').disabled = true;
+            document.getElementById('status').textContent = '';
+                }
+            } catch (error) {
+                console.error('카메라 재시작 오류:', error);
+                alert('카메라 재시작 중 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+            }
+        });
+
+        // 사진 업로드
+        document.getElementById('upload-btn').addEventListener('click', () => {
+            document.getElementById('file-input').click();
+        });
+
+        document.getElementById('file-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                // 파일 크기 제한 (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('파일 크기는 5MB를 초과할 수 없습니다.');
+                    return;
+                }
+
+                // 파일 형식 검사
+                if (!file.type.match('image.*')) {
+                    alert('이미지 파일만 업로드 가능합니다.');
+                    return;
+                }
+
+                try {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        // 미리보기 표시
+                        const previewImage = document.getElementById('previewImage');
+                        previewImage.src = e.target.result;
+                        document.getElementById('previewContainer').style.display = 'block';
+                        
+                        // 카메라 화면 숨김
+                        document.getElementById('video').style.display = 'none';
+                        document.getElementById('capture-btn').style.display = 'none';
+                        document.getElementById('retake-btn').style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                } catch (error) {
+                    console.error('이미지 미리보기 오류:', error);
+                    alert('이미지 미리보기에 실패했습니다.');
+                }
+            }
+        });
+
+        // 선택 영역 초기화
+        function resetSelection() {
+            selectionBox.style.display = 'none';
+            selectionBox.style.left = '0px';
+            selectionBox.style.top = '0px';
+            selectionBox.style.width = '0px';
+            selectionBox.style.height = '0px';
+            processButton.disabled = true;
+        }
+
+        // 선택 영역 업데이트
+        function updateSelection(x, y, width, height) {
+            // 이미지 경계 내에서만 선택 가능하도록 제한
+            const rect = previewImage.getBoundingClientRect();
+            x = Math.max(0, Math.min(x, rect.width - width));
+            y = Math.max(0, Math.min(y, rect.height - height));
+            
+            selectionBox.style.left = x + 'px';
+            selectionBox.style.top = y + 'px';
+            selectionBox.style.width = width + 'px';
+            selectionBox.style.height = height + 'px';
+            
+            // 최소 크기 체크 (10x10 픽셀로 변경)
+            if (width > 10 && height > 10) {
+                processButton.disabled = false;
+            } else {
+                processButton.disabled = true;
+            }
+        }
+
+        // 핸들 이벤트 처리
+        handles.forEach(handle => {
+            handle.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                isResizing = true;
+                currentHandle = handle;
+                startX = e.clientX;
+                startY = e.clientY;
+            });
+        });
+
+        // 확대/축소 기능
+        function updateZoom() {
+            previewImage.style.transform = `scale(${currentZoom})`;
+            previewImage.style.transformOrigin = 'top left';
+        }
+
+        const zoomInBtn = document.getElementById('zoomIn');
+        const zoomOutBtn = document.getElementById('zoomOut');
+
+        zoomInBtn.addEventListener('click', () => {
+            currentZoom = Math.min(2.0, currentZoom + 0.1);
+            updateZoom();
+        });
+
+        zoomOutBtn.addEventListener('click', () => {
+            currentZoom = Math.max(1.0, currentZoom - 0.1);
+            updateZoom();
+        });
+
+        // 이미지 선택 이벤트
+        previewImage.addEventListener('mousedown', (e) => {
+            if (e.target !== previewImage) return;
+            
+            isSelecting = true;
+            const rect = previewImage.getBoundingClientRect();
+            startX = (e.clientX - rect.left) / currentZoom;
+            startY = (e.clientY - rect.top) / currentZoom;
+            
+            selectionBox.style.display = 'block';
+            updateSelection(startX, startY, 0, 0);
+        });
+
+        // 마우스 이동 이벤트
+        document.addEventListener('mousemove', (e) => {
+            if (!isSelecting && !isResizing) return;
+            
+            const rect = previewImage.getBoundingClientRect();
+            const currentX = (e.clientX - rect.left) / currentZoom;
+            const currentY = (e.clientY - rect.top) / currentZoom;
+            
+            if (isResizing && currentHandle) {
+                const handleClass = currentHandle.className;
+                let x = parseInt(selectionBox.style.left);
+                let y = parseInt(selectionBox.style.top);
+                let width = parseInt(selectionBox.style.width);
+                let height = parseInt(selectionBox.style.height);
+                
+                if (handleClass.includes('top-left')) {
+                    width += x - currentX;
+                    height += y - currentY;
+                    x = currentX;
+                    y = currentY;
+                } else if (handleClass.includes('top-right')) {
+                    width = currentX - x;
+                    height += y - currentY;
+                    y = currentY;
+                } else if (handleClass.includes('bottom-left')) {
+                    width += x - currentX;
+                    height = currentY - y;
+                    x = currentX;
+                } else if (handleClass.includes('bottom-right')) {
+                    width = currentX - x;
+                    height = currentY - y;
+                }
+                
+                width = Math.max(10, width);
+                height = Math.max(10, height);
+                
+                updateSelection(x, y, width, height);
+            } else if (isSelecting) {
+                const width = currentX - startX;
+                const height = currentY - startY;
+                updateSelection(startX, startY, width, height);
+            }
+        });
+
+        // 마우스 업 이벤트
+        document.addEventListener('mouseup', () => {
+            isSelecting = false;
+            isResizing = false;
+            currentHandle = null;
+        });
+
+        // 이미지 처리 버튼 이벤트
+        document.getElementById('processImage').addEventListener('click', async () => {
+            const previewImage = document.getElementById('previewImage');
+            if (!previewImage.src) {
+                alert('처리할 이미지가 없습니다.');
+                return;
+            }
+
+            const selectionBox = document.getElementById('selectionBox');
+            if (!selectionBox.style.display || selectionBox.style.display === 'none') {
+                alert('시험지 영역을 선택해주세요.');
+                return;
+            }
+
+            const selection = {
+                startX: parseInt(selectionBox.style.left),
+                startY: parseInt(selectionBox.style.top),
+                endX: parseInt(selectionBox.style.left) + parseInt(selectionBox.style.width),
+                endY: parseInt(selectionBox.style.top) + parseInt(selectionBox.style.height)
+            };
+
+            try {
+                document.getElementById('progressContainer').style.display = 'block';
+                document.getElementById('previewContainer').style.display = 'none';
+                await detectPaper(previewImage.src, selection);
+            } catch (error) {
+                console.error('이미지 처리 오류:', error);
+                alert('이미지 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+        });
+
+        // 취소 버튼 이벤트
+        document.getElementById('cancelPreview').addEventListener('click', () => {
+            resetSelection();
+            document.getElementById('previewContainer').style.display = 'none';
+            document.getElementById('video').style.display = 'block';
+            document.getElementById('capture-btn').style.display = 'inline-block';
+            document.getElementById('file-input').value = '';
+        });
+
+        // 페이지 로드 시 카메라 시작
+        window.addEventListener('load', async () => {
+            try {
+                const success = await startCamera();
+                if (!success) {
+                    document.getElementById('capture-btn').disabled = true;
+                }
+            } catch (error) {
+                console.error('페이지 로드 오류:', error);
+                alert('카메라 초기화 중 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+            }
+        });
+
+        // 페이지 언로드 시 리소스 정리
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html> 

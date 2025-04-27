@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>측정 결과 보기 - pH 측정 놀이터</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f4f8;
+            margin: 0;
+            padding: 40px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .result-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .result-card h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .result-image {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .result-values {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .value-box {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .value-box.ph { background: #2196f3; }
+        .value-box.red { background: #f44336; }
+        .value-box.green { background: #4caf50; }
+        .value-box.blue { background: #2196f3; }
+        
+        .timestamp {
+            color: #666;
+            font-size: 12px;
+            text-align: right;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .nav-button:hover {
+            background: #1976d2;
+        }
+
+        /* 처음으로 돌아가는 버튼 스타일 */
+        .home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 12px 24px;
+            background-color: #FF8A65;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .home-button:hover {
+            background-color: #FF7043;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .home-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- 처음으로 돌아가는 버튼 -->
+    <button class="home-button" onclick="window.location.href='../../index.html'">
+      🏠 처음으로
+    </button>
+
+    <div class="container">
+        <h1>📊 저장된 측정 결과</h1>
+        
+        <div id="results-container" class="results-grid">
+            <!-- 결과 카드들이 여기에 동적으로 추가됩니다 -->
+        </div>
+        
+        <div class="navigation-buttons">
+            <button onclick="location.href='measurement.html'" class="nav-button">새로 측정하기</button>
+            <button onclick="location.href='index.html'" class="nav-button">활동의 처음으로</button>
+        </div>
+    </div>
+
+    <script>
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function displayResults() {
+            const container = document.getElementById('results-container');
+            const savedResults = JSON.parse(localStorage.getItem('savedResults') || '[]');
+            
+            if (savedResults.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <h3>저장된 결과가 없습니다</h3>
+                        <p>새로운 측정을 시작해보세요!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 최신 결과부터 표시
+            savedResults.reverse().forEach(result => {
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                card.innerHTML = `
+                    <img src="${result.image}" alt="측정 이미지" class="result-image">
+                    <h3>pH 측정 결과</h3>
+                    <div class="result-values">
+                        <div class="value-box ph">
+                            <div>pH</div>
+                            <div>${result.ph.toFixed(2)}</div>
+                        </div>
+                        <div class="value-box red">
+                            <div>R</div>
+                            <div>${result.rgb.red}</div>
+                        </div>
+                        <div class="value-box green">
+                            <div>G</div>
+                            <div>${result.rgb.green}</div>
+                        </div>
+                        <div class="value-box blue">
+                            <div>B</div>
+                            <div>${result.rgb.blue}</div>
+                        </div>
+                    </div>
+                    <div class="timestamp">측정 시간: ${formatDate(result.timestamp)}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 페이지 로드 시 결과 표시
+        window.addEventListener('load', displayResults);
+    </script>
+</body>
+</html> 

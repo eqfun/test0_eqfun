@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>교사용 대시보드</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f0f4f8;
+    }
+    .dashboard-container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .access-denied {
+      text-align: center;
+      color: #e74c3c;
+      padding: 20px;
+    }
+    .dashboard-content {
+      display: none;
+    }
+    button {
+      padding: 10px;
+      background: #2980b9;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+    button:hover {
+      background: #3498db;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <div id="access-denied" class="access-denied">
+      <h2>접근 권한이 없습니다</h2>
+      <p>교사 계정으로 로그인해야 이 페이지에 접근할 수 있습니다.</p>
+      <button onclick="window.location.href='login.html'">로그인 페이지로 이동</button>
+    </div>
+    
+    <div id="dashboard-content" class="dashboard-content">
+      <h2>교사용 대시보드</h2>
+      <p>환영합니다! 여기는 교사용 대시보드입니다.</p>
+      <!-- 여기에 교사용 대시보드 콘텐츠 추가 -->
+    </div>
+  </div>
+
+  <!-- Firebase SDK 추가 -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Firebase 초기화 설정
+    const firebaseConfig = {
+      apiKey: "AIzaSyBE0r282qiZAoL6MCYbpLt-Zmxp7JDYMVk",
+      authDomain: "test-equilibrifun.firebaseapp.com",
+      projectId: "test-equilibrifun",
+      storageBucket: "test-equilibrifun.firebasestorage.app",
+      messagingSenderId: "804507284339",
+      appId: "1:804507284339:web:d03de182b9e8fadccb0b06",
+      measurementId: "G-HXPF6NZE8D"
+    };
+
+    // Firebase 초기화
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+  </script>
+
+  <script>
+    // 인증 상태 확인
+    auth.onAuthStateChanged(async (user) => {
+      const accessDenied = document.getElementById('access-denied');
+      const dashboardContent = document.getElementById('dashboard-content');
+
+      if (!user) {
+        // 로그인하지 않은 경우
+        accessDenied.style.display = 'block';
+        dashboardContent.style.display = 'none';
+        return;
+      }
+
+      // Firestore에서 사용자 정보 가져오기
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      const userData = userDoc.data();
+
+      if (userData && userData.userType === 'teacher') {
+        // 교사인 경우
+        accessDenied.style.display = 'none';
+        dashboardContent.style.display = 'block';
+      } else {
+        // 교사가 아닌 경우
+        accessDenied.style.display = 'block';
+        dashboardContent.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html> 

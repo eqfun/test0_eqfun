@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Equilibrium Runner</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+  <script src="game.js" defer></script>
+  <!-- 공통 CSS 추가 -->
+  <link rel="stylesheet" href="../styles/common.css">
+  <style>
+    body { 
+      margin: 0; 
+      padding: 0; 
+      overflow: hidden;
+      background-image: url('assets/background.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #game {
+      border: 2px solid #fff;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <!-- 처음으로 돌아가는 버튼 -->
+  <button class="home-button" onclick="window.location.href='../index.html'">
+    🏠 처음으로
+  </button>
+  <div id="game"></div>
+  <script>
+    function completeActivity() {
+      const user = firebase.auth().currentUser;
+      if (!user) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
+      const userRef = db.collection('users').doc(user.uid);
+      userRef.update({
+        'activities.formative_assessment': {
+          status: 'completed',
+          progress: 100,
+          completedAt: new Date()
+        }
+      }).then(() => {
+        alert('학습이 완료되었습니다!');
+        window.location.href = '../student_dashboard/student_dashboard.html';
+      }).catch((error) => {
+        console.error('Error updating document: ', error);
+        alert('오류가 발생했습니다. 다시 시도해주세요.');
+      });
+    }
+  </script>
+</body>
+</html>

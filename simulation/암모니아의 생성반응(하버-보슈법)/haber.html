@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>하버-보슈법 시뮬레이터</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #4CAF50;
+      --secondary-color: #2196F3;
+      --accent-color: #FF9800;
+      --background-color: #f5f5f5;
+      --card-color: #ffffff;
+      --text-color: #333333;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      padding: 20px;
+      background: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 20px;
+      background: var(--card-color);
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      color: var(--primary-color);
+      font-size: 2.2em;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: var(--text-color);
+      font-size: 1.1em;
+    }
+
+    .section {
+      background: var(--card-color);
+      padding: 25px;
+      margin-bottom: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .section h2 {
+      color: var(--secondary-color);
+      font-size: 1.5em;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section h2::before {
+      content: "⚗️";
+      font-size: 1.2em;
+    }
+
+    .reaction-equation {
+      text-align: center;
+      font-size: 1.4em;
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #e8f5e9;
+      border-radius: 10px;
+      color: var(--primary-color);
+      font-weight: bold;
+    }
+
+    .inputs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .input-group {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 10px;
+      border-left: 4px solid var(--secondary-color);
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+
+    .input-group input, .input-group select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+
+    .input-group .help-text {
+      font-size: 0.85em;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button.primary {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    button.secondary {
+      background: var(--secondary-color);
+      color: white;
+    }
+
+    button.danger {
+      background: #f44336;
+      color: white;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .chart-container {
+      position: relative;
+      height: 400px;
+      width: 100%;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .result-box {
+      background: #e3f2fd;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    .result-box h3 {
+      color: var(--secondary-color);
+      margin-top: 0;
+    }
+
+    .result-value {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    @media (max-width: 768px) {
+      .inputs {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .guide-section {
+      background: #fff3e0;
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .guide-section h2 {
+      color: #ff9800;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .guide-section h2::before {
+      content: "📚";
+    }
+
+    .guide-step {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: white;
+      border-radius: 10px;
+      border-left: 4px solid #ff9800;
+    }
+
+    .guide-step h3 {
+      color: #ff9800;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .guide-step p {
+      margin: 10px 0;
+      color: #666;
+    }
+
+    .tip-box {
+      background: #e8f5e9;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+      border-left: 4px solid #4CAF50;
+    }
+
+    .tip-box::before {
+      content: "💡";
+      margin-right: 8px;
+      color: #4CAF50;
+    }
+
+    .result-guide {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    .result-guide h3 {
+      color: #2196F3;
+      margin-top: 0;
+    }
+
+    .result-guide ul {
+      padding-left: 20px;
+    }
+
+    .result-guide li {
+      margin: 8px 0;
+    }
+
+    .history-section {
+      background: #f5f5f5;
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .history-section h2 {
+      color: #795548;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .history-section h2::before {
+      content: "📜";
+    }
+
+    .history-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .history-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .history-card h3 {
+      color: #795548;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .history-card p {
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .simulator-section {
+      margin-top: 40px;
+    }
+
+    .complete-btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    .complete-btn:hover {
+      background-color: #45a049;
+    }
+
+    .complete-btn:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    /* 처음으로 돌아가는 버튼 스타일 */
+    .home-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 12px 24px;
+      background-color: #FF8A65;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .home-button:hover {
+      background-color: #FF7043;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .home-button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <!-- 처음으로 돌아가는 버튼 -->
+  <button class="home-button" onclick="window.location.href='../../index.html'">
+    🏠 처음으로
+  </button>
+
+  <div class="container">
+    <div class="header">
+      <h1>⚗️ 하버-보슈법 시뮬레이터</h1>
+      <p>암모니아 합성 반응을 시뮬레이션해보세요!</p>
+    </div>
+
+    <!-- 역사적 의미 섹션 추가 -->
+    <div class="history-section">
+      <h2>하버-보슈법의 역사적 의미</h2>
+      <div class="history-content">
+        <div class="history-card">
+          <h3>🌍 인류사의 혁명</h3>
+          <p>하버-보슈법은 20세기 초 프리츠 하버와 카를 보슈에 의해 개발된 암모니아 합성 공정입니다. 이 공정은 인류 역사상 가장 중요한 화학 공정 중 하나로 꼽힙니다.</p>
+        </div>
+        <div class="history-card">
+          <h3>🌱 식량 생산의 혁신</h3>
+          <p>이 공정의 개발로 대량의 암모니아를 합성할 수 있게 되었고, 이를 통해 질소 비료를 대량 생산할 수 있게 되었습니다. 이는 전 세계적인 식량 생산 증가에 크게 기여했습니다.</p>
+        </div>
+        <div class="history-card">
+          <h3>🏭 현대 산업의 기반</h3>
+          <p>오늘날에도 이 공정은 전 세계 암모니아 생산의 80% 이상을 차지하며, 비료, 플라스틱, 의약품 등 다양한 산업의 기반이 되고 있습니다.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 기본 개념 설명과 1차 시뮬레이터 -->
+    <div class="guide-section">
+      <h2>1️⃣ 기본 개념 이해하기</h2>
+      <div class="guide-step">
+        <h3>하버-보슈법이란?</h3>
+        <p>하버-보슈법은 질소(N₂)와 수소(H₂)를 반응시켜 암모니아(NH₃)를 만드는 공정입니다.</p>
+        <p class="reaction-equation">N₂ (g) + 3H₂ (g) ⇌ 2NH₃ (g)</p>
+        <div class="tip-box">
+          이 반응은 가역반응으로, 반응물과 생성물이 평형을 이루게 됩니다.
+        </div>
+      </div>
+    </div>
+
+    <div class="simulator-section">
+      <div class="section">
+        <h2>기본 반응 시뮬레이션</h2>
+        <div class="inputs">
+          <div class="input-group">
+            <label>N₂ 농도 (mol/L)</label>
+            <input id="n2_1" type="number" value="1.0" step="0.1" />
+            <div class="help-text">질소 기체의 초기 농도입니다</div>
+          </div>
+          <div class="input-group">
+            <label>H₂ 농도 (mol/L)</label>
+            <input id="h2_1" type="number" value="3.0" step="0.1" />
+            <div class="help-text">수소 기체의 초기 농도입니다</div>
+          </div>
+          <div class="input-group">
+            <label>압력 (bar)</label>
+            <input id="pressure_1" type="number" value="200.0" step="0.1" />
+            <div class="help-text">반응 용기의 압력입니다</div>
+          </div>
+          <div class="input-group">
+            <label>온도 (K)</label>
+            <input id="temp_1" type="number" value="700" step="10" />
+            <div class="help-text">반응 용기의 온도입니다</div>
+          </div>
+          <div class="input-group">
+            <label>반응 시간 (시간)</label>
+            <input id="time_1" type="number" value="100" step="0.5" />
+            <div class="help-text">반응을 진행하는 시간입니다</div>
+          </div>
+          <div class="input-group">
+            <label>촉매 선택</label>
+            <select id="catalyst_1">
+              <option value="none">촉매 없음</option>
+              <option value="positive">정촉매</option>
+              <option value="negative">부촉매</option>
+            </select>
+            <div class="help-text">반응 속도를 변화시키는 촉매입니다</div>
+          </div>
+        </div>
+        <div class="button-group">
+          <button class="primary" onclick="simulate1()">▶️ 시뮬레이션 실행</button>
+          <button class="secondary" onclick="downloadCSV(lastResult1, 'simulation1.csv')">📥 결과 저장</button>
+          <button class="danger" onclick="reset1()">🔄 초기화</button>
+          <button class="complete-btn" onclick="completeActivity()">학습 완료</button>
+        </div>
+        <div class="chart-container">
+          <canvas id="chart1"></canvas>
+        </div>
+        <div class="result-box" id="result1">
+          <div class="result-guide">
+            <h3>📊 결과 해석 가이드</h3>
+            <ul>
+              <li>그래프의 각 선은 N₂(파란색), H₂(초록색), NH₃(주황색)의 농도를 나타냅니다.</li>
+              <li>평형 도달 지점은 빨간 점선으로 표시됩니다.</li>
+              <li>K<sub>eq</sub>는 평형 상수로, 반응의 진행 방향을 나타냅니다.</li>
+              <li>농도는 mol/L 단위로 표시됩니다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 평형 이동 설명과 2차 시뮬레이터 -->
+    <div class="guide-section">
+      <h2>2️⃣ 평형 이동 실험</h2>
+      <div class="guide-step">
+        <h3>평형 이동이란?</h3>
+        <p>화학 평형 상태에서 반응 조건(농도, 압력, 온도)을 변화시키면, 반응이 새로운 평형 상태로 이동하는 현상을 말합니다.</p>
+        <div class="tip-box">
+          르샤틀리에의 원리를 기억하세요: 평형 상태의 반응에 변화를 가하면, 그 변화를 감소시키는 방향으로 반응이 진행됩니다.
+        </div>
+      </div>
+    </div>
+
+    <div class="simulator-section">
+      <div class="section">
+        <h2>평형 이동 시뮬레이션</h2>
+        <div class="inputs">
+          <div class="input-group">
+            <label>추가 N₂ (mol/L)</label>
+            <input id="n2_add" type="number" value="0.0" step="0.1" />
+            <div class="help-text">추가로 넣는 질소 기체의 양입니다</div>
+          </div>
+          <div class="input-group">
+            <label>추가 H₂ (mol/L)</label>
+            <input id="h2_add" type="number" value="0.0" step="0.1" />
+            <div class="help-text">추가로 넣는 수소 기체의 양입니다</div>
+          </div>
+          <div class="input-group">
+            <label>압력 (bar)</label>
+            <input id="pressure_2" type="number" value="200.0" step="0.1" />
+            <div class="help-text">새로운 반응 용기의 압력입니다</div>
+          </div>
+          <div class="input-group">
+            <label>온도 (K)</label>
+            <input id="temp_2" type="number" value="700" step="10" />
+            <div class="help-text">새로운 반응 용기의 온도입니다</div>
+          </div>
+          <div class="input-group">
+            <label>반응 시간 (시간)</label>
+            <input id="time_2" type="number" value="100" step="0.5" />
+            <div class="help-text">반응을 진행하는 시간입니다</div>
+          </div>
+          <div class="input-group">
+            <label>촉매 선택</label>
+            <select id="catalyst_2">
+              <option value="none">촉매 없음</option>
+              <option value="positive">정촉매</option>
+              <option value="negative">부촉매</option>
+            </select>
+            <div class="help-text">새로운 반응에서 사용하는 촉매입니다</div>
+          </div>
+        </div>
+        <div class="button-group">
+          <button class="primary" onclick="simulate2()">▶️ 시뮬레이션 실행</button>
+          <button class="secondary" onclick="downloadCSV(lastResult2, 'simulation2.csv')">📥 결과 저장</button>
+          <button class="danger" onclick="reset2()">🔄 초기화</button>
+          <button class="complete-btn" onclick="completeActivity()">학습 완료</button>
+        </div>
+        <div class="chart-container">
+          <canvas id="chart2"></canvas>
+        </div>
+        <div class="result-box" id="result2">
+          <div class="result-guide">
+            <h3>📊 평형 이동 해석 가이드</h3>
+            <ul>
+              <li>첫 번째 실험의 결과와 비교해보세요.</li>
+              <li>반응물을 추가하면 평형이 어떻게 이동하는지 관찰하세요.</li>
+              <li>압력이나 온도를 바꾸면 반응이 어떻게 변하는지 확인하세요.</li>
+              <li>촉매가 반응 속도에 미치는 영향을 살펴보세요.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  let lastResult1 = null, lastResult2 = null;
+  let final_n2 = null, final_h2 = null, final_nh3 = null;
+
+  function getEa(type, base) {
+    if (type === "positive") return base * 0.8;
+    if (type === "negative") return base * 1.2;
+    return base;
+  }
+
+  function simulateReaction(n2, h2, nh3, T, catalyst, hours) {
+    const R = 8.314;
+    const dt = hours > 100 ? 0.5 : (hours > 10 ? 0.1 : 0.05);
+    const steps = Math.floor((hours * 3600) / dt);
+    const A_f = 1.5e-4, A_r = 3.0e-5;
+    const Ea_f = getEa(catalyst, 110000);
+    const Ea_r = getEa(catalyst, 90000);
+    const kf = A_f * Math.exp(-Ea_f / (R * T));
+    const kr = A_r * Math.exp(-Ea_r / (R * T));
+
+    const time = [], N2 = [], H2 = [], NH3 = [];
+    let eqIndex = null;
+    let lastNH3 = nh3;
+    let stableCount = 0;
+    let maxNH3 = 0;  // 최대 NH3 농도 추적
+    let lastChangeRate = null;  // 이전 변화율 저장
+
+    for (let i = 0; i <= steps; i++) {
+      const t = i * dt;
+      time.push(t);
+      N2.push(n2); H2.push(h2); NH3.push(nh3);
+      
+      // 정반응과 역반응의 속도 계산
+      const rf = kf * n2 * Math.pow(h2, 3);
+      const rr = kr * Math.pow(nh3, 2);
+      const delta = rf - rr;
+      
+      if (i > 10) {
+        // 암모니아의 상대적 농도 변화율 계산
+        const nh3Change = Math.abs(nh3 - lastNH3);
+        const relativeChange = nh3Change / (nh3 || 1e-10);  // 0으로 나누기 방지
+        
+        // 최대 NH3 농도 업데이트
+        if (nh3 > maxNH3) {
+          maxNH3 = nh3;
+        }
+        
+        // 평형 도달 조건: 
+        // 1. 상대적 변화율이 매우 작을 때 (0.000005% 이하)
+        // 2. 현재 농도가 최대 농도의 99.99% 이상일 때
+        // 3. 변화율이 지속적으로 감소하고 있을 때
+        if (relativeChange < 0.00000005 && nh3 >= maxNH3 * 0.9999) {
+          if (lastChangeRate === null || relativeChange < lastChangeRate) {
+            stableCount++;
+            if (stableCount >= 10 && eqIndex === null) {
+              eqIndex = i;
+              console.log(`평형 도달: ${t}초 (${formatTime(t)})`);
+              console.log(`NH₃ 상대 변화율: ${(relativeChange * 100).toFixed(8)}%`);
+              console.log(`NH₃ 농도: ${nh3.toFixed(3)} mol/L (최대: ${maxNH3.toFixed(3)} mol/L)`);
+              console.log(`농도: N₂=${n2.toFixed(3)} mol/L, H₂=${h2.toFixed(3)} mol/L`);
+            }
+          } else {
+            stableCount = 0;
+          }
+        } else {
+          stableCount = 0;
+        }
+        
+        lastNH3 = nh3;
+        lastChangeRate = relativeChange;
+      }
+      
+      // 농도 업데이트
+      nh3 += 2 * delta * dt;
+      n2 -= delta * dt;
+      h2 -= 3 * delta * dt;
+      
+      if (n2 < 0) n2 = 0;
+      if (h2 < 0) h2 = 0;
+      if (nh3 < 0) nh3 = 0;
+    }
+    return { time, N2, H2, NH3, K: (kf / kr).toFixed(3), eqIndex };
+  }
+
+  // 시간을 시:분:초 형식으로 변환하는 함수
+  function formatTime(seconds) {
+    const totalSeconds = parseFloat(seconds);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const remainingSeconds = Math.floor(totalSeconds % 60);
+    return `${hours}시간 ${minutes}분 ${remainingSeconds}초`;
+  }
+  </script>
+
+  <script>
+  function drawChart(canvasId, result, pressure, previousData = null) {
+    try {
+      // 기존 차트 제거
+      if (window[canvasId + '_chart']) {
+        window[canvasId + '_chart'].destroy();
+      }
+
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      
+      // 데이터 샘플링 최적화
+      const totalHours = parseFloat(result.time[result.time.length - 1]) / 3600;
+      const maxDataPoints = 500;
+      const step = Math.max(1, Math.floor(result.time.length / maxDataPoints));
+
+      // 샘플링된 데이터 생성
+      const n2Data = [], h2Data = [], nh3Data = [];
+      let maxN2 = 0, maxH2 = 0, maxNH3 = 0;
+
+      // 이전 데이터 추가 (2번째 시뮬레이터인 경우)
+      if (previousData && canvasId === "chart2") {
+        const previousPressure = parseFloat(document.getElementById("pressure_1").value);
+        const previousStep = Math.max(1, Math.floor(previousData.time.length / 50)); // 마지막 40시간의 데이터를 50개 포인트로 샘플링
+        const startIndex = Math.max(0, previousData.time.length - Math.floor(144000 / (previousData.time[1] - previousData.time[0]))); // 마지막 144000초(40시간)의 데이터
+
+        for (let i = startIndex; i < previousData.time.length; i += previousStep) {
+          const x = (previousData.time[i] - previousData.time[startIndex]) / 3600 - 40; // -40시간에서 0시간 사이에 표시
+          const n2 = previousData.N2[i] / previousPressure;
+          const h2 = previousData.H2[i] / previousPressure;
+          const nh3 = previousData.NH3[i] / previousPressure;
+
+          n2Data.push({ x, y: n2 });
+          h2Data.push({ x, y: h2 });
+          nh3Data.push({ x, y: nh3 });
+
+          if (n2 > maxN2) maxN2 = n2;
+          if (h2 > maxH2) maxH2 = h2;
+          if (nh3 > maxNH3) maxNH3 = nh3;
+        }
+      }
+
+      // 현재 데이터 추가
+      for (let i = 0; i < result.time.length; i += step) {
+        const x = result.time[i] / 3600;
+        const n2 = result.N2[i] / pressure;
+        const h2 = result.H2[i] / pressure;
+        const nh3 = result.NH3[i] / pressure;
+
+        n2Data.push({ x, y: n2 });
+        h2Data.push({ x, y: h2 });
+        nh3Data.push({ x, y: nh3 });
+
+        if (n2 > maxN2) maxN2 = n2;
+        if (h2 > maxH2) maxH2 = h2;
+        if (nh3 > maxNH3) maxNH3 = nh3;
+      }
+
+      const maxConcentration = Math.max(maxN2, maxH2, maxNH3);
+
+      // 평형 도달 시간 계산
+      let equilibriumTime = null;
+      if (result.eqIndex !== null) {
+        equilibriumTime = result.time[result.eqIndex] / 3600;
+      }
+
+      // 차트 데이터 준비
+      const datasets = [
+        {
+          label: 'N₂',
+          data: n2Data,
+          borderColor: '#0000FF',
+          borderWidth: 0.25,
+          pointRadius: 1,
+          pointHoverRadius: 2,
+          fill: false
+        },
+        {
+          label: 'H₂',
+          data: h2Data,
+          borderColor: '#008000',
+          borderWidth: 0.25,
+          pointRadius: 1,
+          pointHoverRadius: 2,
+          fill: false
+        },
+        {
+          label: 'NH₃',
+          data: nh3Data,
+          borderColor: '#FF4500',
+          borderWidth: 0.25,
+          pointRadius: 1,
+          pointHoverRadius: 2,
+          fill: false
+        }
+      ];
+
+      // 차트 옵션 설정
+      const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            usePointStyle: true,
+            pointStyle: 'rect',
+            padding: 10,
+            font: { size: 12 }
+          },
+          annotation: {
+            annotations: equilibriumTime ? {
+              line1: {
+                type: 'line',
+                xMin: equilibriumTime,
+                xMax: equilibriumTime,
+                borderColor: 'rgb(255, 0, 0)',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                label: {
+                  content: '평형 도달',
+                  enabled: true,
+                  position: 'top',
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  color: 'rgb(255, 255, 0)',
+                  font: {
+                    size: 12,
+                    weight: 'bold'
+                  }
+                }
+              }
+            } : {}
+          }
+        },
+        scales: {
+          x: {
+            type: 'linear',
+            title: { display: true, text: '시간 (시간)' },
+            ticks: {
+              maxTicksLimit: 10,
+              font: { size: 10 }
+            },
+            min: canvasId === "chart2" ? -40 : undefined, // 2번째 차트의 경우 -40시간부터 시작
+            max: canvasId === "chart2" ? totalHours : undefined // 2번째 차트의 경우 최대 시간 제한
+          },
+          y: {
+            title: { display: true, text: '농도 (mol/L)' },
+            min: 0,
+            max: maxConcentration * 1.1,
+            ticks: {
+              font: { size: 10 }
+            }
+          }
+        }
+      };
+
+      // 차트 생성
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: { datasets },
+        options
+      });
+
+      window[canvasId + '_chart'] = chart;
+    } catch (error) {
+      console.error('차트 그리기 오류:', error);
+    }
+  }
+  </script>
+
+  <script>
+  function simulate1() {
+    const n2 = parseFloat(document.getElementById("n2_1").value);
+    const h2 = parseFloat(document.getElementById("h2_1").value);
+    const pressure = parseFloat(document.getElementById("pressure_1").value);
+    const temp = parseFloat(document.getElementById("temp_1").value);
+    const time = parseFloat(document.getElementById("time_1").value);
+    const catalyst = document.getElementById("catalyst_1").value;
+    
+    const adjusted_n2 = n2 * pressure;
+    const adjusted_h2 = h2 * pressure;
+    
+    const result = simulateReaction(adjusted_n2, adjusted_h2, 0, temp, catalyst, time);
+    final_n2 = result.N2[result.N2.length - 1];
+    final_h2 = result.H2[result.H2.length - 1];
+    final_nh3 = result.NH3[result.NH3.length - 1];
+    lastResult1 = result;
+    drawChart("chart1", result, pressure);
+    
+    let eqTimeText = "계산 안됨";
+    if (result.eqIndex !== null) {
+      const eqTime = result.time[result.eqIndex];
+      eqTimeText = formatTime(eqTime);
+    }
+    
+    document.getElementById("result1").innerHTML =
+      `📘 K<sub>eq</sub>: ${result.K}<br>평형 도달 시간: ${eqTimeText}<br>평형 농도 → N₂: ${(final_n2/pressure).toFixed(3)}, H₂: ${(final_h2/pressure).toFixed(3)}, NH₃: ${(final_nh3/pressure).toFixed(3)}`;
+  }
+
+  function simulate2() {
+    if (final_n2 === null || final_h2 === null || final_nh3 === null) {
+      alert("⚠️ 먼저 1차 시뮬레이션을 실행해주세요.");
+      return;
+    }
+    const n2_add = parseFloat(document.getElementById("n2_add").value);
+    const h2_add = parseFloat(document.getElementById("h2_add").value);
+    const pressure = parseFloat(document.getElementById("pressure_2").value);
+    const temp = parseFloat(document.getElementById("temp_2").value);
+    const time = parseFloat(document.getElementById("time_2").value);
+    const catalyst = document.getElementById("catalyst_2").value;
+    
+    // 1차 시뮬레이션의 최종 농도를 실제 농도로 변환
+    const previousPressure = parseFloat(document.getElementById("pressure_1").value);
+    const actual_n2 = final_n2 / previousPressure;
+    const actual_h2 = final_h2 / previousPressure;
+    const actual_nh3 = final_nh3 / previousPressure;
+    
+    // 새로운 압력에 맞게 농도 조정
+    const n2 = (actual_n2 + n2_add) * pressure;
+    const h2 = (actual_h2 + h2_add) * pressure;
+    const nh3 = actual_nh3 * pressure;
+    
+    const result = simulateReaction(n2, h2, nh3, temp, catalyst, time);
+    lastResult2 = result;
+    drawChart("chart2", result, pressure, lastResult1);
+    
+    let eqTimeText = "계산 안됨";
+    if (result.eqIndex !== null) {
+      const eqTime = result.time[result.eqIndex];
+      eqTimeText = formatTime(eqTime);
+    }
+    
+    document.getElementById("result2").innerHTML =
+      `📕 K<sub>eq</sub>: ${result.K}<br>평형 도달 시간: ${eqTimeText}<br>평형 농도 → N₂: ${(result.N2[result.N2.length-1]/pressure).toFixed(3)}, H₂: ${(result.H2[result.H2.length-1]/pressure).toFixed(3)}, NH₃: ${(result.NH3[result.NH3.length-1]/pressure).toFixed(3)}`;
+  }
+  </script>
+
+  <script>
+  function reset1() {
+    document.getElementById("n2_1").value = 1.0;
+    document.getElementById("h2_1").value = 3.0;
+    document.getElementById("pressure_1").value = 200.0;
+    document.getElementById("temp_1").value = 700;
+    document.getElementById("time_1").value = 100;
+    document.getElementById("catalyst_1").value = "none";
+    document.getElementById("result1").innerHTML = "";
+    if (window.chart1_chart) window.chart1_chart.destroy();
+  }
+
+  function reset2() {
+    document.getElementById("n2_add").value = 0.0;
+    document.getElementById("h2_add").value = 0.0;
+    document.getElementById("pressure_2").value = 200.0;
+    document.getElementById("temp_2").value = 700;
+    document.getElementById("time_2").value = 100;
+    document.getElementById("catalyst_2").value = "none";
+    document.getElementById("result2").innerHTML = "";
+    if (window.chart2_chart) window.chart2_chart.destroy();
+  }
+
+  function downloadCSV(data, filename) {
+    if (!data) {
+      alert("No data available for download");
+      return;
+    }
+
+    let csv = "Time(min),N2(mol/L),H2(mol/L),NH3(mol/L)\n";
+    const minuteInterval = 60; // 1분 = 60초
+    
+    for (let i = 0; i < data.time.length; i++) {
+      const currentTime = parseFloat(data.time[i]);
+      // 1분 간격으로만 데이터 기록
+      if (currentTime % minuteInterval === 0) {
+        const minutes = currentTime / minuteInterval;
+        csv += `${minutes},${data.N2[i].toFixed(6)},${data.H2[i].toFixed(6)},${data.NH3[i].toFixed(6)}\n`;
+      }
+    }
+    
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+  }
+  </script>
+
+  <script>
+  // Firebase 초기화
+  const firebaseConfig = {
+      // ... 기존 설정 ...
+  };
+
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+
+  const db = firebase.firestore();
+
+  // 활동 완료 함수
+  function completeActivity() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    const userRef = db.collection('users').doc(user.uid);
+    userRef.update({
+      'activities.simulator': {
+        status: 'completed',
+        progress: 100,
+        completedAt: new Date()
+      }
+    }).then(() => {
+      alert('학습이 완료되었습니다!');
+      window.location.href = '../../student_dashboard/student_dashboard.html';
+    }).catch((error) => {
+      console.error('Error updating document: ', error);
+      alert('오류가 발생했습니다. 다시 시도해주세요.');
+    });
+  }
+
+  // 페이지 로드 시 버튼 상태 확인
+  firebase.auth().onAuthStateChanged(async (user) => {
+      if (user) {
+          const userDoc = await db.collection('users').doc(user.uid).get();
+          const userData = userDoc.data();
+          
+          if (userData && userData.activities && userData.activities.simulator) {
+              const completeBtn = document.querySelector('.complete-btn');
+              if (userData.activities.simulator.status === 'completed') {
+                  completeBtn.disabled = true;
+                  completeBtn.textContent = '이미 완료됨';
+              }
+          }
+      }
+  });
+  </script>
+</body>
+</html>
