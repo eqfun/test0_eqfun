@@ -11,8 +11,6 @@
   <!-- jQuery 최신 버전 추가 -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <!-- 공통 CSS 추가 -->
-  <link rel="stylesheet" href="styles/common.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -343,8 +341,6 @@
       color: #95a5a6;
       margin-top: 10px;
     }
-
-    /* 처음으로 돌아가는 버튼 스타일 제거 */
   </style>
 </head>
 <body>
@@ -414,9 +410,18 @@
     </div>
     <div class="menu-card">
       <h3>6. 학습 현황</h3>
-      <a href="student_dashboard/student_dashboard.html">📊 학습 현황 확인하기</a>
+      <a href="student_dashboard.html">📊 학습 현황 확인하기</a>
       <p style="margin-top: 10px; font-size: 14px; color: #666;">
         각 활동의 진행 상황을 확인하세요.<br>
+      
+      </p>
+    </div>
+  <div class="menu-card">
+      <h3>7. 학생 설문조사</h3>
+      <a href="https://forms.gle/BaFP11e5UkNZeh798">📊 학생 설문조사 및 사용자 피드백</a>
+      <p style="margin-top: 10px; font-size: 14px; color: #666;">
+        학생들은 설문조사에 응답하고, 로그인 기능과 챗봇 기능을 제외한 SW에 대한 의견을 남겨주세요.<br>
+      
       </p>
     </div>
   </div>
@@ -506,8 +511,7 @@
         updateConnectionStatus('connecting');
         
         try {
-            // 깃허브 페이지용 WebSocket 서버 URL로 변경
-            socket = io('https://eqfun.github.io/test0_eqfun/', {
+            socket = io('http://localhost:5000', {
                 transports: ['websocket'],
                 reconnection: true,
                 reconnectionAttempts: maxReconnectAttempts,
@@ -518,20 +522,17 @@
                 console.log('WebSocket 연결 성공');
                 updateConnectionStatus('connected');
                 reconnectAttempts = 0;
-                addMessage('르샤틀리에 챗봇이 연결되었습니다. 질문을 입력해주세요!', false);
             });
 
             socket.on('disconnect', () => {
                 console.log('WebSocket 연결 종료');
                 updateConnectionStatus('disconnected');
-                addMessage('챗봇 연결이 끊어졌습니다. 잠시 후 다시 시도해주세요.', false);
                 attemptReconnect();
             });
 
             socket.on('error', (error) => {
                 console.error('WebSocket 오류:', error);
                 updateConnectionStatus('disconnected');
-                addMessage('챗봇 연결 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', false);
                 attemptReconnect();
             });
 
